@@ -78,17 +78,14 @@ public class KinectUpdateThread : MonoBehaviour {
                 {
                     int fullIndex = (y * depthWidth) + x;
 
-                    float zc = depthData[fullIndex] / 65535F;
+                    float zc = 100 * depthData[fullIndex] / 65535F; 
                     float xc = 1 - (x / (float)depthWidth) - 0.5F;
                     float yc = 1 - (y / (float)depthHeight) - 0.5F;
-                    xc *= zc * 20;
-                    yc *= zc * 20;
+
+                    xc *= zc * (depthWidth / (float)depthHeight);
+                    yc *= zc;
 
                     _positions[fullIndex] = new Color(xc, yc, zc);
-
-                    //_colors[fullIndex] = KinectColTex.GetPixel((int)colorSpace[fullIndex].X, (int)colorSpace[fullIndex].Y);
-
-
 
                     int colorIndex = (((int)colorSpace[fullIndex].Y * colorWidth) + (int)colorSpace[fullIndex].X) * 4;
                     if (colorIndex >= 0 && colorIndex < colorData.Length)

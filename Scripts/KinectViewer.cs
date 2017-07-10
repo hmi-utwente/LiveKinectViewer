@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class KinectViewer : MonoBehaviour
 {
-    private KinectUpdateThread kinectUpdateThread;
     public Material m_material;
+    public KinectSource frameSource;
 
     private Mesh mesh;
     public int m_maxPointsInInstance = 10000;
@@ -15,27 +15,29 @@ public class KinectViewer : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        kinectUpdateThread = GetComponent<KinectUpdateThread>();
-
         CreateMesh();
     }
 
     // Update is called once per frame
     void Update()
     {
-        Texture2D newColTex = kinectUpdateThread.GetColTex();
-        Texture2D newPosTex = kinectUpdateThread.GetPosTex();
-
-        if (newColTex != null)
+        FrameObj frame = frameSource.GetNewFrame();
+        if (frame != null)
         {
-            Destroy(m_material.GetTexture("_ColorTex"));
-            m_material.SetTexture("_ColorTex", newColTex);
-        }
+            Texture2D newColTex = frame.colTex;
+            Texture2D newPosTex = frame.posTex;
 
-        if (newPosTex != null)
-        {
-            Destroy(m_material.GetTexture("_PositionTex"));
-            m_material.SetTexture("_PositionTex", newPosTex);
+            if (newColTex != null)
+            {
+                Destroy(m_material.GetTexture("_ColorTex"));
+                m_material.SetTexture("_ColorTex", newColTex);
+            }
+
+            if (newPosTex != null)
+            {
+                Destroy(m_material.GetTexture("_PositionTex"));
+                m_material.SetTexture("_PositionTex", newPosTex);
+            }
         }
 
     }
@@ -57,7 +59,7 @@ public class KinectViewer : MonoBehaviour
             mr.material = m_material;
             go.transform.parent = transform;
 
-            int pointsInMesh = Math.Min(m_maxPointsInInstance, m_maxPoints- totIndex);
+            int pointsInMesh = Math.Min(m_maxPointsInInstance, m_maxPoints - totIndex);
             Vector3[] verts = new Vector3[pointsInMesh];
             int[] faces = new int[pointsInMesh * 3];
             Vector2[] uvs0 = new Vector2[pointsInMesh];  // pos
@@ -68,11 +70,11 @@ public class KinectViewer : MonoBehaviour
                 verts[i] = new Vector3(0f, 0f, 0f);
                 faces[i * 3] = i; // make sure every vertex is at least once in the faces/triangle array, or it won't get rendered
 
-                float xx = totIndex % kinectUpdateThread.depthWidth;
-                float yy = totIndex / (float)kinectUpdateThread.depthWidth;
+                float xx = totIndex % frameSource.depthWidth;
+                float yy = totIndex / (float)frameSource.depthWidth;
 
-                xx /= kinectUpdateThread.depthWidth;
-                yy /= kinectUpdateThread.depthHeight;
+                xx /= frameSource.depthWidth;
+                yy /= frameSource.depthHeight;
 
                 uvs0[i] = new Vector2(xx, yy);
                 uvs1[i] = new Vector2(xx, yy);

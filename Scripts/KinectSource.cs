@@ -1,0 +1,143 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Windows.Kinect;
+using System.Threading;
+
+public class KinectSource : FrameSource
+{
+    public int colorWidth { get; private set; }
+    public int colorHeight { get; private set; }
+    public int depthWidth { get; private set; }
+    public int depthHeight { get; private set; }
+
+    private KinectSensor _Sensor;
+    private MultiSourceFrameReader _Reader;
+    private CoordinateMapper _Mapper;
+    private ushort[] _DepthData;
+    private byte[] _ColorData;
+
+    Thread thread;
+    private bool running = false;
+
+    // Use this for initialization
+    void Start()
+    {
+        _Sensor = KinectSensor.GetDefault();
+
+        if (_Sensor != null)
+        {
+            _Reader = _Sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth);
+
+            var colorFrameDesc = _Sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Rgba);
+            colorWidth = colorFrameDesc.Width;
+            colorHeight = colorFrameDesc.Height;
+            _ColorData = new byte[colorFrameDesc.BytesPerPixel * colorFrameDesc.LengthInPixels];
+
+            var depthFrameDesc = _Sensor.DepthFrameSource.FrameDescription;
+            depthWidth = depthFrameDesc.Width;
+            depthHeight = depthFrameDesc.Height;
+            _DepthData = new ushort[depthFrameDesc.LengthInPixels];
+
+            if (!_Sensor.IsOpen)
+            {
+                _Sensor.Open();
+            }
+        }
+
+        thread = new Thread(Run);
+        thread.Start();
+    }
+
+    void Run()
+    {
+        running = true;
+        while (running)
+        {
+            if (_Reader != null)
+            {
+                Debug.Log("got _Reader");
+                var frame = _Reader.AcquireLatestFrame();
+                if (frame != null)
+                {
+                    Debug.Log("got frame");
+                    var colorFrame = frame.ColorFrameReference.AcquireFrame();
+                    if (colorFrame != null)
+                    {
+                        var depthFrame = frame.DepthFrameReference.AcquireFrame();
+                        if (depthFrame != null)
+                        {
+                            colorFrame.CopyConvertedFrameDataToArray(_ColorData, ColorImageFormat.Rgba);
+                            depthFrame.CopyFrameDataToArray(_DepthData);
+
+                            ColorSpacePoint[] colorSpace = new ColorSpacePoint[_DepthData.Length];
+                            _Mapper.MapDepthFrameToColorSpace(_DepthData, colorSpace);
+
+                            Color[] _positions = new Color[depthWidth * depthHeight];
+                            Color[] _colors = new Color[depthWidth * depthHeight];
+
+                            for (int y = 0; y < depthHeight; y++)
+                            {
+                                for (int x = 0; x < depthWidth; x++)
+                                {
+                                    int fullIndex = (y * depthWidth) + x;
+
+                                    float zc = 100 * _DepthData[fullIndex] / 65535F;
+                                    float xc = 1 - (x / (float)depthWidth) - 0.5F;
+                                    float yc = 1 - (y / (float)depthHeight) - 0.5F;
+
+                                    xc *= zc * (depthWidth / (float)depthHeight);
+                                    yc *= zc;
+
+                                    _positions[fullIndex] = new Color(xc, yc, zc);
+
+                                    int colorIndex = (((int)colorSpace[fullIndex].Y * colorWidth) + (int)colorSpace[fullIndex].X) * 4;
+                                    if (colorIndex >= 0 && colorIndex < _ColorData.Length)
+                                        _colors[fullIndex] = new Color(_ColorData[colorIndex] / 255F, _ColorData[colorIndex + 1] / 255F, _ColorData[colorIndex + 2] / 255F);
+                                    else
+                                        _colors[fullIndex] = Color.black;
+                                }
+                            }
+
+                            PreFrameObj newFrame = new PreFrameObj();
+                            newFrame.colors = _colors;
+                            newFrame.positions = _positions;
+                            newFrame.timeStamp = Time.time;
+
+                            frameQueue.Enqueue(newFrame);
+
+                            depthFrame.Dispose();
+                            depthFrame = null;
+                        }
+
+                        colorFrame.Dispose();
+                        colorFrame = null;
+                    }
+
+                    frame = null;
+                }
+            }
+        }
+    }
+
+
+    void OnApplicationQuit()
+    {
+        if (_Reader != null)
+        {
+            _Reader.Dispose();
+            _Reader = null;
+        }
+
+        if (_Sensor != null)
+        {
+            if (_Sensor.IsOpen)
+            {
+                _Sensor.Close();
+            }
+
+            _Sensor = null;
+        }
+    }
+
+}

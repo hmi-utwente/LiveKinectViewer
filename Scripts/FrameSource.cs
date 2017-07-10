@@ -82,7 +82,6 @@ public class LockingQueue<T> : IEnumerable<T>
         lock (_queue)
         {
             T returnObj = default(T);
-            Debug.Log(_queue.Count);
             while (_queue.Count > 0)
             {
                 returnObj = _queue.Dequeue();
@@ -93,7 +92,6 @@ public class LockingQueue<T> : IEnumerable<T>
 
     public void Enqueue(T data)
     {
-        Debug.Log("enqueue");
         if (data == null) throw new ArgumentNullException("data");
 
         lock (_queue)

@@ -6,10 +6,10 @@ using System.Threading;
 
 public class KinectSource : FrameSource
 {
-    public int colorWidth { get; private set; }
-    public int colorHeight { get; private set; }
-    public int depthWidth { get; private set; }
-    public int depthHeight { get; private set; }
+    public int colorWidth;
+    public int colorHeight;
+    public int depthWidth;
+    public int depthHeight;
 
     private KinectSensor _Sensor;
     private MultiSourceFrameReader _Reader;
@@ -27,6 +27,7 @@ public class KinectSource : FrameSource
 
         if (_Sensor != null)
         {
+            _Mapper = _Sensor.CoordinateMapper;
             _Reader = _Sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth);
 
             var colorFrameDesc = _Sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Rgba);
@@ -56,11 +57,9 @@ public class KinectSource : FrameSource
         {
             if (_Reader != null)
             {
-                Debug.Log("got _Reader");
                 var frame = _Reader.AcquireLatestFrame();
                 if (frame != null)
                 {
-                    Debug.Log("got frame");
                     var colorFrame = frame.ColorFrameReference.AcquireFrame();
                     if (colorFrame != null)
                     {
@@ -101,8 +100,9 @@ public class KinectSource : FrameSource
 
                             PreFrameObj newFrame = new PreFrameObj();
                             newFrame.colors = _colors;
+                            newFrame.colSize = new Vector2(depthWidth, depthHeight);
                             newFrame.positions = _positions;
-                            newFrame.timeStamp = Time.time;
+                            newFrame.posSize = new Vector2(depthWidth, depthHeight);
 
                             frameQueue.Enqueue(newFrame);
 
@@ -120,9 +120,10 @@ public class KinectSource : FrameSource
         }
     }
 
-
     void OnApplicationQuit()
     {
+        running = false;
+        thread.Join();  // block till thread is finished
         if (_Reader != null)
         {
             _Reader.Dispose();

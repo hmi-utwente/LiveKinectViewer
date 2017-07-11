@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 
-public class KinectViewer : MonoBehaviour
+public class PointCloudViewer : MonoBehaviour
 {
     public Material m_material;
     public KinectSource frameSource;

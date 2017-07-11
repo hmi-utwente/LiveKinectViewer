@@ -31,11 +31,13 @@ public class FrameSource : MonoBehaviour
             newFrame.posTex.wrapMode = TextureWrapMode.Repeat;
             newFrame.posTex.filterMode = FilterMode.Point;
             newFrame.posTex.SetPixels(preObj.positions);
+            newFrame.posTex.Apply();
 
             newFrame.colTex = new Texture2D((int)preObj.colSize.x, (int)preObj.colSize.y, TextureFormat.RGBAFloat, false);
             newFrame.colTex.wrapMode = TextureWrapMode.Repeat;
             newFrame.colTex.filterMode = FilterMode.Point;
             newFrame.colTex.SetPixels(preObj.colors);
+            newFrame.colTex.Apply();
 
             newFrame.timeStamp = preObj.timeStamp;
 

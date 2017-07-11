@@ -6,16 +6,17 @@ using UnityEngine;
 public class PointCloudViewer : MonoBehaviour
 {
     public Material m_material;
-    public KinectSource frameSource;
+    public FrameSource frameSource;
+    public Vector2 resolution = new Vector2();
 
-    private Mesh mesh;
+    public List<GameObject> meshes = new List<GameObject>();
+
     public int m_maxPointsInInstance = 10000;
-    public int m_maxPoints = 217088;
+    public int m_maxPoints = 0;
 
     // Use this for initialization
     void Start()
     {
-        CreateMesh();
     }
 
     // Update is called once per frame
@@ -24,15 +25,25 @@ public class PointCloudViewer : MonoBehaviour
         FrameObj frame = frameSource.GetNewFrame();
         if (frame != null)
         {
-            Texture2D newColTex = frame.colTex;
-            Texture2D newPosTex = frame.posTex;
+            Vector2 _resolution = new Vector2(frame.posTex.width, frame.posTex.height);
+            if (!resolution.Equals(_resolution))
+            {
+                resolution = _resolution;
+                m_maxPoints = (int)(_resolution.x * _resolution.y);
+                CreateMesh();
+            }
 
+            transform.position = frame.cameraPos;
+            transform.rotation = frame.cameraRot;
+
+            Texture2D newColTex = frame.colTex;
             if (newColTex != null)
             {
                 Destroy(m_material.GetTexture("_ColorTex"));
                 m_material.SetTexture("_ColorTex", newColTex);
             }
 
+            Texture2D newPosTex = frame.posTex;
             if (newPosTex != null)
             {
                 Destroy(m_material.GetTexture("_PositionTex"));
@@ -45,12 +56,18 @@ public class PointCloudViewer : MonoBehaviour
 
     void CreateMesh()
     {
+        foreach(GameObject mesh in meshes)
+        {
+            Destroy(mesh);
+        }
+
         int totIndex = 0;
         int meshId = 0;
 
         while (totIndex < m_maxPoints)
         {
             GameObject go = new GameObject();
+            meshes.Add(go);
             go.name = "Mesh" + meshId++;
             MeshFilter mf = go.AddComponent<MeshFilter>();
             Mesh msh = new Mesh();
@@ -70,11 +87,11 @@ public class PointCloudViewer : MonoBehaviour
                 verts[i] = new Vector3(0f, 0f, 0f);
                 faces[i * 3] = i; // make sure every vertex is at least once in the faces/triangle array, or it won't get rendered
 
-                float xx = totIndex % frameSource.depthWidth;
-                float yy = totIndex / (float)frameSource.depthWidth;
+                float xx = totIndex % resolution.x;
+                float yy = totIndex / resolution.x;
 
-                xx /= frameSource.depthWidth;
-                yy /= frameSource.depthHeight;
+                xx /= resolution.x;
+                yy /= resolution.y;
 
                 uvs0[i] = new Vector2(xx, yy);
                 uvs1[i] = new Vector2(xx, yy);

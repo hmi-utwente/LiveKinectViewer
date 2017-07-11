@@ -39,6 +39,9 @@ public class FrameSource : MonoBehaviour
             newFrame.colTex.SetPixels(preObj.colors);
             newFrame.colTex.Apply();
 
+            newFrame.cameraPos = preObj.cameraPos;
+            newFrame.cameraRot = preObj.cameraRot;
+
             newFrame.timeStamp = preObj.timeStamp;
 
             return newFrame;
@@ -54,6 +57,8 @@ public class FrameObj
 {
     public Texture2D posTex;
     public Texture2D colTex;
+    public Vector3 cameraPos;
+    public Quaternion cameraRot;
     public float timeStamp;
 }
 
@@ -63,6 +68,8 @@ public class PreFrameObj
     public Vector2 posSize;
     public Color[] colors;
     public Vector2 colSize;
+    public Vector3 cameraPos;
+    public Quaternion cameraRot;
     public float timeStamp;
 }
 

@@ -103,6 +103,9 @@ public class KinectSource : FrameSource
                             newFrame.colSize = new Vector2(depthWidth, depthHeight);
                             newFrame.positions = _positions;
                             newFrame.posSize = new Vector2(depthWidth, depthHeight);
+                            newFrame.cameraPos = new Vector3();
+                            newFrame.cameraRot = new Quaternion();
+
 
                             frameQueue.Enqueue(newFrame);
 

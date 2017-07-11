@@ -7,12 +7,11 @@ public class PointCloudViewer : MonoBehaviour
 {
     public Material m_material;
     public FrameSource frameSource;
-    public Vector2 resolution = new Vector2();
 
-    public List<GameObject> meshes = new List<GameObject>();
-
-    public int m_maxPointsInInstance = 10000;
-    public int m_maxPoints = 0;
+    private Vector2 resolution = new Vector2();
+    private List<GameObject> meshes = new List<GameObject>();
+    private int m_maxPointsInInstance = 60000;
+    private int m_maxPoints = 0;
 
     // Use this for initialization
     void Start()

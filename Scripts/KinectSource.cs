@@ -6,10 +6,13 @@ using System.Threading;
 
 public class KinectSource : FrameSource
 {
-    public int colorWidth;
-    public int colorHeight;
-    public int depthWidth;
-    public int depthHeight;
+    private int colorWidth;
+    private int colorHeight;
+    private int depthWidth;
+    private int depthHeight;
+
+    public Vector3 cameraPos = new Vector3();
+    public Quaternion cameraRot = new Quaternion();
 
     private KinectSensor _Sensor;
     private MultiSourceFrameReader _Reader;
@@ -103,8 +106,8 @@ public class KinectSource : FrameSource
                             newFrame.colSize = new Vector2(depthWidth, depthHeight);
                             newFrame.positions = _positions;
                             newFrame.posSize = new Vector2(depthWidth, depthHeight);
-                            newFrame.cameraPos = new Vector3();
-                            newFrame.cameraRot = new Quaternion();
+                            newFrame.cameraPos = cameraPos;
+                            newFrame.cameraRot = cameraRot;
 
 
                             frameQueue.Enqueue(newFrame);

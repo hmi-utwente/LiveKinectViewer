@@ -11,8 +11,9 @@ public class KinectSource : FrameSource
     private int depthWidth;
     private int depthHeight;
 
-    public Vector3 cameraPos = new Vector3();
-    public Quaternion cameraRot = new Quaternion();
+    public GameObject cameraTransform;
+    private Vector3 cameraPos = new Vector3();
+    private Quaternion cameraRot = new Quaternion();
 
     private KinectSensor _Sensor;
     private MultiSourceFrameReader _Reader;
@@ -51,6 +52,12 @@ public class KinectSource : FrameSource
 
         thread = new Thread(Run);
         thread.Start();
+    }
+
+    private void Update()
+    {
+        cameraPos = cameraTransform.transform.position;
+        cameraRot = cameraTransform.transform.rotation;
     }
 
     void Run()

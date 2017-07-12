@@ -91,7 +91,7 @@ public class KinectSource : FrameSource
                                 {
                                     int fullIndex = (y * depthWidth) + x;
 
-                                    float zc = 100 * _DepthData[fullIndex] / 65535F;
+                                    float zc = 71 * _DepthData[fullIndex] / 65535F;
                                     float xc = 1 - (x / (float)depthWidth) - 0.5F;
                                     float yc = 1 - (y / (float)depthHeight) - 0.5F;
 

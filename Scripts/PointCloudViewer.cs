@@ -75,14 +75,16 @@ public class PointCloudViewer : MonoBehaviour
             mr.material = m_material;
             go.transform.parent = transform;
 
-            int pointsInMesh = Math.Min(m_maxPointsInInstance, m_maxPoints - totIndex);
+			int pointsInMesh = Math.Min(m_maxPointsInInstance, m_maxPoints - totIndex);
+			int[] indices = new int[pointsInMesh];
             Vector3[] verts = new Vector3[pointsInMesh];
             int[] faces = new int[pointsInMesh * 3];
             Vector2[] uvs0 = new Vector2[pointsInMesh];  // pos
             Vector2[] uvs1 = new Vector2[pointsInMesh];  // col
 
             for (int i = 0; i < pointsInMesh; ++i)
-            {
+			{
+				indices [i] = i;
                 verts[i] = new Vector3(0f, 0f, 0f);
                 faces[i * 3] = i; // make sure every vertex is at least once in the faces/triangle array, or it won't get rendered
 
@@ -98,10 +100,13 @@ public class PointCloudViewer : MonoBehaviour
                 totIndex++;
             }
 
+			//Debug.Log(msh.GetTopology (0));
             msh.vertices = verts;
             msh.triangles = faces;
             msh.uv = uvs0;
             msh.uv2 = uvs1;
+
+			msh.SetIndices (indices, MeshTopology.Points, 0);
             msh.bounds = new Bounds(Vector3.zero, new Vector3(100f, 100f, 100f));
         }
     }

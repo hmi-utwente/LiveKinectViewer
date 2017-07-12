@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Windows.Kinect;
@@ -155,3 +156,4 @@ public class KinectSource : FrameSource
     }
 
 }
+#endif

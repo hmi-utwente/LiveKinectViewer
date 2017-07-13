@@ -8,13 +8,26 @@ using System.Threading;
 using UnityEngine;
 using System;
 
+
+public class KinectFrame {
+	public int deviceID = 0;
+	public int startRow = 0;
+	public int endRow = 0;
+	public int lines = 0;
+	public UInt32 sequence = 0;
+	public byte[]   depthData = new byte[KinectStreamingListener.MaxLinesPerBlock*KinectStreamingListener.LineWidth*2];
+	public byte[]   colorData = new byte[KinectStreamingListener.MaxLinesPerBlock*KinectStreamingListener.LineWidth/2];
+}
+
+
 public class KinectStreamingListener {
 
-	public static int LinesPerBlock = 20;
+	public const int MaxLinesPerBlock = 20;
+	public const int LineWidth = 512;
+	public const int TextureHeight = 424;
 
 	Thread listenThread;
 	Thread processThread;
-	Queue<KinectFrame> messageQueue;
 	Queue<KinectFrame> processQueue;
 	Queue<KinectFrame> unusedQueue;
 
@@ -27,9 +40,14 @@ public class KinectStreamingListener {
 	private int headerSize = 10;
 
 	UdpClient udpClient;
-	private object _messageQueueLock = new object();
 	private object _processQueueLock = new object();
 	private object _unusedQueueLock = new object();
+
+
+	private object _depthDataLock = new object();
+	private object _colorDataLock = new object();
+
+	private object _depthResLock = new object();
 
 	bool listening;
 	bool processing;
@@ -37,14 +55,23 @@ public class KinectStreamingListener {
 
 	UInt32 newestSequence = 0;
 
+	public ushort[] _DepthData;
+	private byte[] _ColorData;
+
+	private Color[] _DepthRes;
+
 	public KinectStreamingListener(int port) {
-		kinectFrameBuffer = new KinectFrame[64];
+		kinectFrameBuffer = new KinectFrame[32];
+
+		_DepthData = new ushort[LineWidth * TextureHeight];
+		_ColorData = new byte[TextureHeight*(LineWidth/2)];
+		_DepthRes = new Color[KinectStreamingListener.TextureHeight * KinectStreamingListener.LineWidth];
+
 		unusedQueue = new Queue<KinectFrame> ();
 		for (int i = 0; i < kinectFrameBuffer.Length; i++) {
 			kinectFrameBuffer [i] = new KinectFrame ();
 			unusedQueue.Enqueue (kinectFrameBuffer [i]);
 		}
-		messageQueue = new Queue<KinectFrame> ();
 		processQueue = new Queue<KinectFrame> ();
 
 		ThreadStart listenStart = new ThreadStart (Listen);
@@ -57,6 +84,39 @@ public class KinectStreamingListener {
 		processThread.Start();
 	}
 
+	public void ColorLoadRaw(ref Texture2D tex) {
+		lock (_colorDataLock) {
+			tex.LoadRawTextureData (_ColorData);
+		}
+	}
+
+	public Color[] ComputeDepthColors() {
+		_ComputeDepthColors ();
+		return _DepthRes;
+		/*
+		lock (_depthResLock) {
+			return _DepthRes;
+		}*/
+	}
+
+	private void _ComputeDepthColors() {
+		for (int y = 0; y < TextureHeight; y++) {
+			for (int x = 0; x < LineWidth; x++) {
+				int fullIndex = (y * LineWidth) + x;
+
+				// TODO: should we lock on _DepthData?
+				float zc = 71 * _DepthData[fullIndex] / 65535F;
+				float xc = 1 - (x / (float)LineWidth) - 0.5F;
+				float yc = 1 - (y / (float)TextureHeight) - 0.5F;
+
+				xc *= zc * (LineWidth / (float)TextureHeight);
+				yc *= zc;
+
+				_DepthRes[fullIndex] = new Color(xc, yc, zc);
+			}
+		}
+	}
+
 	public void Close() {
 		listening = false;
 		processing = false;
@@ -66,12 +126,6 @@ public class KinectStreamingListener {
 			listenThread.Join (500);
 		if (processThread != null)
 			processThread.Join (500);
-	}
-
-	public void Release(KinectFrame frame) {
-		lock (_unusedQueueLock) {
-			unusedQueue.Enqueue (frame);
-		}
 	}
 
 	private int QueuedProcesses() {
@@ -86,52 +140,60 @@ public class KinectStreamingListener {
 		}
 	}
 
-	public int QueuedMessages() {
-		lock (_messageQueueLock) {
-			return messageQueue.Count;
-		}
-	}
-
-	public KinectFrame Read() {
-		lock (_messageQueueLock) {
-			return messageQueue.Dequeue();
-		}
-	}
-
-	void Process() {
+	private void Process() {
 		processing = true;
 		try {
 			while (processing) {
 				if (QueuedProcesses() < 1) continue;
 
 				KinectFrame frame = ReadProcess();
-				//frame.colorDataC = new Color[512 * frame.lines];
-				for (int pixel = 0; pixel < frame.colorDataC.Length; pixel++) {
-					frame.colorDataC [pixel] = new Color (
-						frame.colorData [pixel * 4 + 2] / 255.0f,
-						frame.colorData [pixel * 4 + 1] / 255.0f,
-						frame.colorData [pixel * 4 + 0] / 255.0f
-					);
+
+				if (newestSequence < frame.sequence) {
+					newestSequence = frame.sequence;
+
+					if (processQueue.Count > 0) {
+						Debug.Log(processQueue.Count+" unprocessed dropped, seq: "+frame.sequence);
+						lock (_processQueueLock) lock (_unusedQueueLock) {
+							while (processQueue.Count > 0) {
+								unusedQueue.Enqueue(processQueue.Dequeue());
+							}
+						}
+					}
+
+					/* 
+					//Alternative: compute depth colors in thread
+					lock (_depthResLock) {
+						_ComputeDepthColors();
+					} */
 				}
 
-				for (int pixel = 0; pixel < frame.depthData16.Length; pixel++) {
-					frame.depthData16[pixel] = System.BitConverter.ToUInt16 (frame.depthData, pixel * 2);
+				// Part of old frame (could still happen, even if we drop old data).
+				if (frame.sequence < newestSequence) {
+					lock (_unusedQueueLock) {
+						unusedQueue.Enqueue(frame);
+					}
+					continue;
 				}
 
-				/*
-				frame.depthDataC = new Color[512 * frame.lines];
-				for (int pixel = 0; pixel < frame.depthDataC.Length; pixel++) {
-					ushort value = System.BitConverter.ToUInt16 (frame.depthData, pixel * 2);
+				// Color Data
+				lock(_colorDataLock) {
+					Buffer.BlockCopy(frame.colorData, 0, _ColorData, frame.startRow*LineWidth/2, frame.lines*LineWidth/2);
+				}
 
-					frame.depthDataC [pixel] = new Color (
-						value / 2000.0f,
-						value / 2000.0f,
-						value / 2000.0f
-					);
-				}*/
+				// TODO: in between these two, render thread could get a depth image that is behind the color image...
+				// ...lock on both instead?
 
-				lock (_messageQueueLock) {
-					messageQueue.Enqueue(frame);
+				// Depth Data
+				int writeOffset = frame.startRow*LineWidth;
+				int pixelsToWrite = frame.lines*LineWidth;
+				lock (_depthDataLock) {
+					for (int pixel = 0; pixel < pixelsToWrite; pixel++) {
+						_DepthData[writeOffset+pixel] = System.BitConverter.ToUInt16 (frame.depthData, pixel * 2);
+					}
+				}
+
+				lock (_unusedQueueLock) {
+					unusedQueue.Enqueue(frame);
 				}
 			}
 		} catch (Exception e) {
@@ -143,7 +205,7 @@ public class KinectStreamingListener {
 		Debug.Log ("Process Thread Closed");
 	}
 
-	void Listen() {
+	private void Listen() {
 		try {
 			udpClient = new UdpClient(port);
 			listening = true;
@@ -165,38 +227,8 @@ public class KinectStreamingListener {
 						frame.endRow = BitConverter.ToUInt16(receiveBytes, 8);
 
 						frame.lines = frame.endRow-frame.startRow;
-						int depthDataSize = frame.lines*512*2;
-						int colorDataSize = frame.lines*512*4;
-
-						/*
-						Debug.Log("Lines: "+frame.lines);
-						Debug.Log("Data in:  "+receiveBytes.Length);
-						Debug.Log("Header Size: "+headerSize);
-						Debug.Log("Depth Size: "+depthDataSize);
-						Debug.Log("Color Size: "+colorDataSize);
-						*/
-
-						if (newestSequence < frame.sequence) {
-							newestSequence = frame.sequence;
-							/*
-							if (processQueue.Count > 0) {
-								Debug.Log(processQueue.Count+" unprocessed dropped, seq: "+frame.sequence);
-								lock (_processQueueLock) lock (_unusedQueueLock) {
-									while (processQueue.Count > 0) {
-										unusedQueue.Enqueue(processQueue.Dequeue());
-									}
-								}
-							}*/
-
-							if (messageQueue.Count > 0) {
-								//Debug.Log(messageQueue.Count+" unrendered dropped, seq: "+frame.sequence);
-								lock (_messageQueueLock) lock (_unusedQueueLock) {
-									while (messageQueue.Count > 0) {
-										unusedQueue.Enqueue(messageQueue.Dequeue());
-									}
-								}
-							}
-						}
+						int depthDataSize = frame.lines*(KinectStreamingListener.LineWidth*2);
+						int colorDataSize = frame.lines*(KinectStreamingListener.LineWidth/2); //*4
 
 						Buffer.BlockCopy(receiveBytes, headerSize, frame.depthData, 0, depthDataSize);
 						Buffer.BlockCopy(receiveBytes, headerSize+depthDataSize, frame.colorData, 0, colorDataSize);
@@ -221,17 +253,4 @@ public class KinectStreamingListener {
 		Debug.Log ("Listen Thread Closed");
 	}
 
-}
-
-public class KinectFrame {
-	public int deviceID = 0;
-	public int startRow = 0;
-	public int endRow = 0;
-	public int lines = 0;
-	public UInt32 sequence = 0;
-	public byte[]   depthData = new byte[KinectStreamingListener.LinesPerBlock*512*2];
-	public byte[]   colorData = new byte[KinectStreamingListener.LinesPerBlock*512*4];
-	public Color[] colorDataC = new Color[KinectStreamingListener.LinesPerBlock*512];
-	public ushort[] depthData16 = new ushort[KinectStreamingListener.LinesPerBlock*512];
-	//public Color[] depthDataC = new Color[KinectStreamingListener.LinesPerBlock*512];
 }

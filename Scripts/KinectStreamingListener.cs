@@ -26,6 +26,11 @@ public class KinectStreamingListener {
 	public const int LineWidth = 512;
 	public const int TextureHeight = 424;
 
+	public float dropsPerSecond = 0.0f;
+
+	private int dropCounter = 0;
+	private float lastDropAverage = 0.0f;
+
 	Thread listenThread;
 	Thread processThread;
 	Queue<KinectFrame> processQueue;
@@ -104,8 +109,10 @@ public class KinectStreamingListener {
 			for (int x = 0; x < LineWidth; x++) {
 				int fullIndex = (y * LineWidth) + x;
 
-				// TODO: should we lock on _DepthData?
-				float zc = 71 * _DepthData[fullIndex] / 65535F;
+				float zc = 0.0f;
+				lock (_depthResLock) {
+					zc = 71 * _DepthData[fullIndex] / 65535F;
+				}
 				float xc = 1 - (x / (float)LineWidth) - 0.5F;
 				float yc = 1 - (y / (float)TextureHeight) - 0.5F;
 
@@ -142,8 +149,16 @@ public class KinectStreamingListener {
 
 	private void Process() {
 		processing = true;
+		DateTime start = DateTime.UtcNow;
 		try {
 			while (processing) {
+				float now = (float)(DateTime.UtcNow.Subtract(start)).TotalSeconds;
+				if (lastDropAverage + 3.0 <= now) {
+					lastDropAverage = now;
+					dropsPerSecond = (float)dropCounter / 3.0f;
+					dropCounter = 0;
+				}
+				
 				if (QueuedProcesses() < 1) continue;
 
 				KinectFrame frame = ReadProcess();
@@ -152,7 +167,9 @@ public class KinectStreamingListener {
 					newestSequence = frame.sequence;
 
 					if (processQueue.Count > 0) {
-						Debug.Log(processQueue.Count+" unprocessed dropped, seq: "+frame.sequence);
+						dropCounter = dropCounter+processQueue.Count;
+						//Debug.Log(dropCounter+" unprocessed dropped, seq: "+frame.sequence);
+						
 						lock (_processQueueLock) lock (_unusedQueueLock) {
 							while (processQueue.Count > 0) {
 								unusedQueue.Enqueue(processQueue.Dequeue());

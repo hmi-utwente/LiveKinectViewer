@@ -6,11 +6,7 @@ public class KinectStreamingSource : FrameSource {
 	public string ip = "127.0.0.1";
 	public int responsePort = 1339;
 	private KinectStreamingListener listener;
-	public float msgFps = 0.0f;
-
-	private float fpsSecondsAverage = 2.0f;
-	private float tStartSeconds = 0.0f;
-	private int frameCounter;
+	public float dropsPerSecond = 0.0f;
 
 	public GameObject cameraTransform;
 	private Vector3 cameraPos = new Vector3();
@@ -35,31 +31,21 @@ public class KinectStreamingSource : FrameSource {
 		listener.Close ();
 	}
 
-	void Update () {
-		cameraPos = cameraTransform.transform.position;
-		cameraRot = cameraTransform.transform.rotation;
+	void Update (){
+		dropsPerSecond = listener.dropsPerSecond;
 
 		listener.ColorLoadRaw (ref colorTex);
 		colorTex.Apply ();
 
-		Color[] _positions = listener.ComputeDepthColors();
-		Color[] _colors = colorTex.GetPixels();
-
 		PreFrameObj newFrame = new PreFrameObj();
-		newFrame.colors = _colors;
+		newFrame.colors = colorTex.GetPixels();
 		newFrame.colSize = new Vector2(KinectStreamingListener.LineWidth, KinectStreamingListener.TextureHeight);
-		newFrame.positions = _positions;
+		newFrame.positions = listener.ComputeDepthColors();
 		newFrame.posSize = new Vector2(KinectStreamingListener.LineWidth, KinectStreamingListener.TextureHeight);
-		newFrame.cameraPos = cameraPos;
-		newFrame.cameraRot = cameraRot;
+		newFrame.cameraPos = cameraTransform.transform.position;
+		newFrame.cameraRot = cameraTransform.transform.rotation;
 
 		frameQueue.Enqueue (newFrame);
-
-		if (Time.time >= tStartSeconds + fpsSecondsAverage) {
-			msgFps = frameCounter / fpsSecondsAverage;
-			tStartSeconds = Time.time;
-			frameCounter = 0;
-		}
 	}
 
 }

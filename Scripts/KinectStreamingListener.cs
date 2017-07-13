@@ -10,7 +10,9 @@ using System;
 
 public class KinectStreamingListener {
 
-	public static int LinesPerBlock = 20;
+	public static int MaxLinesPerBlock = 16;
+	public static int LineWidth = 512;
+	public static int TextureHeight = 424;
 
 	Thread listenThread;
 	Thread processThread;
@@ -106,13 +108,14 @@ public class KinectStreamingListener {
 
 				KinectFrame frame = ReadProcess();
 				//frame.colorDataC = new Color[512 * frame.lines];
+				/*
 				for (int pixel = 0; pixel < frame.colorDataC.Length; pixel++) {
 					frame.colorDataC [pixel] = new Color (
 						frame.colorData [pixel * 4 + 2] / 255.0f,
 						frame.colorData [pixel * 4 + 1] / 255.0f,
 						frame.colorData [pixel * 4 + 0] / 255.0f
 					);
-				}
+				}*/
 
 				for (int pixel = 0; pixel < frame.depthData16.Length; pixel++) {
 					frame.depthData16[pixel] = System.BitConverter.ToUInt16 (frame.depthData, pixel * 2);
@@ -165,8 +168,8 @@ public class KinectStreamingListener {
 						frame.endRow = BitConverter.ToUInt16(receiveBytes, 8);
 
 						frame.lines = frame.endRow-frame.startRow;
-						int depthDataSize = frame.lines*512*2;
-						int colorDataSize = frame.lines*512*4;
+						int depthDataSize = frame.lines*(KinectStreamingListener.LineWidth*2);
+						int colorDataSize = frame.lines*(KinectStreamingListener.LineWidth/2); //*4
 
 						/*
 						Debug.Log("Lines: "+frame.lines);
@@ -229,9 +232,9 @@ public class KinectFrame {
 	public int endRow = 0;
 	public int lines = 0;
 	public UInt32 sequence = 0;
-	public byte[]   depthData = new byte[KinectStreamingListener.LinesPerBlock*512*2];
-	public byte[]   colorData = new byte[KinectStreamingListener.LinesPerBlock*512*4];
-	public Color[] colorDataC = new Color[KinectStreamingListener.LinesPerBlock*512];
-	public ushort[] depthData16 = new ushort[KinectStreamingListener.LinesPerBlock*512];
+	public byte[]   depthData = new byte[KinectStreamingListener.MaxLinesPerBlock*KinectStreamingListener.LineWidth*2];
+	public byte[]   colorData = new byte[KinectStreamingListener.MaxLinesPerBlock*KinectStreamingListener.LineWidth/2];
+	public Color[] colorDataC = new Color[KinectStreamingListener.MaxLinesPerBlock*KinectStreamingListener.LineWidth];
+	public ushort[] depthData16 = new ushort[KinectStreamingListener.MaxLinesPerBlock*KinectStreamingListener.LineWidth];
 	//public Color[] depthDataC = new Color[KinectStreamingListener.LinesPerBlock*512];
 }

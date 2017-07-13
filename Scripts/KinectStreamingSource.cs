@@ -25,8 +25,8 @@ public class KinectStreamingSource : FrameSource {
 
 	private ushort[] _DepthData;
 
-	private int texWidth = 512;
-	private int texHeight = 424;
+	private int texWidth = KinectStreamingListener.LineWidth;
+	private int texHeight = KinectStreamingListener.TextureHeight;
 
 
 	private float startupDelay = 2.0f;
@@ -65,8 +65,11 @@ public class KinectStreamingSource : FrameSource {
 
 			if (frame.lines == 0)
 				continue;
-			
-			debugColorTex.SetPixels(0, frame.startRow, 512, frame.lines, frame.colorDataC);
+
+			Texture2D rawTex = new Texture2D (KinectStreamingListener.LineWidth, frame.lines, TextureFormat.DXT1, false);
+			rawTex.LoadRawTextureData (frame.colorData);
+			//debugColorTex.SetPixels(0, frame.startRow, 512, frame.lines, frame.colorDataC);
+			debugColorTex.SetPixels(0, frame.startRow, KinectStreamingListener.LineWidth, frame.lines, rawTex.GetPixels());
 			//debugDepthTex.SetPixels(0, frame.startRow, 512, frame.lines, frame.depthDataC);
 			System.Buffer.BlockCopy(frame.depthData16, 0, _DepthData, frame.startRow*2*texWidth, frame.lines*2*texWidth);
 			listener.Release (frame);

@@ -17,7 +17,7 @@ public class MultiPointCloudViewer : MonoBehaviour {
             newObj.transform.SetParent(transform);
             PointCloudViewer newViewer = newObj.GetComponent<PointCloudViewer>();
             newViewer.frameSource = frameSource;
-            newViewer.m_material = m_material;
+            newViewer.m_material = Instantiate(m_material);
             pointCloudViewers.Add(newViewer);
 
         }

@@ -8,15 +8,25 @@ public class RandomSource : FrameSource
     private int frameWidth = 512;
     private int frameHeight = 424;
 
+    private Vector3 cameraPos = new Vector3();
+    private Quaternion cameraRot = new Quaternion();
+
 
     Thread thread;
     private bool running = false;
 
     // Use this for initialization
-    void Start()
+    private new void Start()
     {
+        base.Start();
         thread = new Thread(Run);
         thread.Start();
+    }
+
+    private void Update()
+    {
+        cameraPos = cameraTransform.position;
+        cameraRot = cameraTransform.rotation;
     }
 
     void Run()
@@ -45,8 +55,8 @@ public class RandomSource : FrameSource
             newFrame.colSize = new Vector2(frameWidth, frameHeight);
             newFrame.positions = _positions;
             newFrame.posSize = new Vector2(frameWidth, frameHeight);
-            newFrame.cameraPos = new Vector3(0, 0, 0);
-            newFrame.cameraRot = new Quaternion(0, 0, 0, 0);
+            newFrame.cameraPos = cameraPos;
+            newFrame.cameraRot = cameraRot;
 
             frameQueue.Enqueue(newFrame);
         }

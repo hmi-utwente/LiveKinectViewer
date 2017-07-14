@@ -8,7 +8,6 @@ public class KinectStreamingSource : FrameSource {
 	private KinectStreamingListener listener;
 	public float dropsPerSecond = 0.0f;
 
-	public GameObject cameraTransform;
 	private Vector3 cameraPos = new Vector3();
 	private Quaternion cameraRot = new Quaternion();
 
@@ -18,9 +17,11 @@ public class KinectStreamingSource : FrameSource {
 	private int texWidth = KinectStreamingListener.LineWidth;
 	private int texHeight = KinectStreamingListener.TextureHeight;
 
-	// Use this for initialization
-	void Start () {
-		colorTex = new Texture2D (KinectStreamingListener.LineWidth, KinectStreamingListener.TextureHeight, TextureFormat.DXT1, false);
+    // Use this for initialization
+    private new void Start()
+    {
+        base.Start();
+        colorTex = new Texture2D (KinectStreamingListener.LineWidth, KinectStreamingListener.TextureHeight, TextureFormat.DXT1, false);
 		colorTex.wrapMode = TextureWrapMode.Clamp;
 		listener = new KinectStreamingListener (responsePort);
 	}
@@ -40,8 +41,8 @@ public class KinectStreamingSource : FrameSource {
 		newFrame.colSize = new Vector2(KinectStreamingListener.LineWidth, KinectStreamingListener.TextureHeight);
 		newFrame.positions = listener.ComputeDepthColors();
 		newFrame.posSize = new Vector2(KinectStreamingListener.LineWidth, KinectStreamingListener.TextureHeight);
-		newFrame.cameraPos = cameraTransform.transform.position;
-		newFrame.cameraRot = cameraTransform.transform.rotation;
+		newFrame.cameraPos = cameraTransform.position;
+		newFrame.cameraRot = cameraTransform.rotation;
 
 		frameQueue.Enqueue (newFrame);
 	}

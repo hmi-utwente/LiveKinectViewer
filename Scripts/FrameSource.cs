@@ -7,11 +7,15 @@ using System;
 public class FrameSource : MonoBehaviour
 {
     public LockingQueue<PreFrameObj> frameQueue = new LockingQueue<PreFrameObj>();
+    public Transform cameraTransform;
 
     // Use this for initialization
-    void Start()
+    public void Start()
     {
-
+        if (cameraTransform == null)
+        {
+            cameraTransform = transform;
+        }
     }
 
     // Update is called once per frame

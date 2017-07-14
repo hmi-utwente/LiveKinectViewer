@@ -14,7 +14,6 @@ public class KinectStreamingSource : FrameSource {
 
 
 	public Texture2D colorTex;
-	public MeshRenderer debugColor;
 
 	private int texWidth = KinectStreamingListener.LineWidth;
 	private int texHeight = KinectStreamingListener.TextureHeight;
@@ -23,7 +22,6 @@ public class KinectStreamingSource : FrameSource {
 	void Start () {
 		colorTex = new Texture2D (KinectStreamingListener.LineWidth, KinectStreamingListener.TextureHeight, TextureFormat.DXT1, false);
 		colorTex.wrapMode = TextureWrapMode.Clamp;
-		debugColor.material.mainTexture = colorTex;
 		listener = new KinectStreamingListener (responsePort);
 	}
 

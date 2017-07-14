@@ -22,7 +22,7 @@ public class KinectFrame {
 
 public class KinectStreamingListener {
 
-	public const int MaxLinesPerBlock = 20;
+	public const int MaxLinesPerBlock = 40;
 	public const int LineWidth = 512;
 	public const int TextureHeight = 424;
 

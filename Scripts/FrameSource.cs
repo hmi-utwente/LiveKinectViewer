@@ -95,6 +95,10 @@ public class LockingQueue<T> : IEnumerable<T>
         lock (_queue)
         {
             T returnObj = default(T);
+            if (_queue.Count > 1)
+            {
+                Debug.Log("Skipping " + (_queue.Count - 1) + " Frames");
+            }
             while (_queue.Count > 0)
             {
                 returnObj = _queue.Dequeue();

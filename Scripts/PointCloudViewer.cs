@@ -13,9 +13,16 @@ public class PointCloudViewer : MonoBehaviour
     private int m_maxPointsInInstance = 60000;
     private int m_maxPoints = 0;
 
+    // fps counter
+    int frameCount = 0;
+    float dt = 0F;
+    float fps = 0F;
+    float updateRate = 2F;  // 2 updates per sec.
+
     // Use this for initialization
     void Start()
     {
+
     }
 
     // Update is called once per frame
@@ -24,6 +31,7 @@ public class PointCloudViewer : MonoBehaviour
         FrameObj frame = frameSource.GetNewFrame();
         if (frame != null)
         {
+            frameCount++;
             Vector2 _resolution = new Vector2(frame.posTex.width, frame.posTex.height);
             if (!resolution.Equals(_resolution))
             {
@@ -50,6 +58,15 @@ public class PointCloudViewer : MonoBehaviour
             }
         }
 
+
+        dt += Time.deltaTime;
+        if (dt > 1.0F / updateRate)
+        {
+            fps = frameCount / dt;
+            frameCount = 0;
+            dt -= 1.0F / updateRate;
+            Debug.Log(name + " FPS: " + fps.ToString("0.0"));
+        }
     }
 
 

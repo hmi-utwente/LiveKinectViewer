@@ -65,7 +65,7 @@ public class PointCloudViewer : MonoBehaviour
             fps = frameCount / dt;
             frameCount = 0;
             dt -= 1.0F / updateRate;
-            Debug.Log(name + " FPS: " + fps.ToString("0.0"));
+            //Debug.Log(name + " FPS: " + fps.ToString("0.0"));
         }
     }
 

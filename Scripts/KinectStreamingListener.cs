@@ -20,6 +20,14 @@ public class KinectFrame
     public byte[] colorData = new byte[KinectStreamingListener.MaxLinesPerBlock * KinectStreamingListener.LineWidth / 2];
 }
 
+public class CounterFrame
+{
+    public int count = 0;
+    public float timeStamp;
+    public bool printed;
+
+}
+
 
 public class KinectStreamingListener
 {
@@ -29,6 +37,8 @@ public class KinectStreamingListener
     public const int TextureHeight = 424;
 
     public float dropsPerSecond = 0.0f;
+    public Dictionary<uint, CounterFrame> frameCounters = new Dictionary<uint, CounterFrame>();
+    public object frameCountersLock = new object();
 
     private int dropCounter = 0;
     private float lastDropAverage = 0.0f;
@@ -37,10 +47,6 @@ public class KinectStreamingListener
     Thread processThread;
     Queue<KinectFrame> processQueue;
     Queue<KinectFrame> unusedQueue;
-
-    public GameObject cameraTransform;
-    private Vector3 cameraPos = new Vector3();
-    private Quaternion cameraRot = new Quaternion();
 
     KinectFrame[] kinectFrameBuffer;
 
@@ -301,6 +307,28 @@ public class KinectStreamingListener
 
                         Buffer.BlockCopy(receiveBytes, headerSize, frame.depthData, 0, depthDataSize);
                         Buffer.BlockCopy(receiveBytes, headerSize + depthDataSize, frame.colorData, 0, colorDataSize);
+
+                        //lock (_unusedQueueLock)
+                        //{
+                        //    unusedQueue.Enqueue(frame);
+                        //}
+
+                        lock (frameCountersLock)
+                        {
+                            if (frameCounters.ContainsKey(frame.sequence))
+                            {
+                                CounterFrame newCounter = frameCounters[frame.sequence];
+                                newCounter.count++;
+                            }
+                            else
+                            {
+                                CounterFrame newCounter = new CounterFrame();
+                                newCounter.count = 1;
+                                newCounter.printed = false;
+                                newCounter.timeStamp = (float)(DateTime.Now.ToUniversalTime() - new DateTime(2017, 7, 16)).TotalSeconds;
+                                frameCounters.Add(frame.sequence, newCounter);
+                            }
+                        }
 
                         lock (_processQueueLock)
                         {

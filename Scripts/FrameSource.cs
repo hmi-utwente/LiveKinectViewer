@@ -37,11 +37,22 @@ public class FrameSource : MonoBehaviour
             newFrame.posTex.SetPixels(preObj.positions);
             newFrame.posTex.Apply();
 
-            newFrame.colTex = new Texture2D((int)preObj.colSize.x, (int)preObj.colSize.y, TextureFormat.RGBAFloat, false);
-            newFrame.colTex.wrapMode = TextureWrapMode.Repeat;
-            newFrame.colTex.filterMode = FilterMode.Point;
-            newFrame.colTex.SetPixels(preObj.colors);
-            newFrame.colTex.Apply();
+            if (preObj.colors != null)
+            {
+                newFrame.colTex = new Texture2D((int)preObj.colSize.x, (int)preObj.colSize.y, TextureFormat.RGBAFloat, false);
+                newFrame.colTex.wrapMode = TextureWrapMode.Repeat;
+                newFrame.colTex.filterMode = FilterMode.Point;
+                newFrame.colTex.SetPixels(preObj.colors);
+                newFrame.colTex.Apply();
+            }else if(preObj.DXT1_colors != null)
+            {
+                newFrame.colTex = new Texture2D((int)preObj.colSize.x, (int)preObj.colSize.y, TextureFormat.DXT1, false);
+                newFrame.colTex.wrapMode = TextureWrapMode.Clamp;
+                newFrame.colTex.filterMode = FilterMode.Point;
+                newFrame.colTex.LoadRawTextureData(preObj.DXT1_colors);
+                newFrame.colTex.Apply();
+            }
+
 
             newFrame.cameraPos = preObj.cameraPos;
             newFrame.cameraRot = preObj.cameraRot;
@@ -71,6 +82,7 @@ public class PreFrameObj
     public Color[] positions;
     public Vector2 posSize;
     public Color[] colors;
+    public byte[] DXT1_colors;
     public Vector2 colSize;
     public Vector3 cameraPos;
     public Quaternion cameraRot;

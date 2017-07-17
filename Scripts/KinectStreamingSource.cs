@@ -29,7 +29,9 @@ public class KinectStreamingSource : FrameSource {
 
 	void OnApplicationQuit() {
 		listener.Close ();
-	}
+        running = false;
+        thread.Join();  // block till thread is finished
+    }
 
 	void Update (){
 		dropsPerSecond = listener.dropsPerSecond;
@@ -42,15 +44,19 @@ public class KinectStreamingSource : FrameSource {
 
     void Run()
     {
-        PreFrameObj newFrame = new PreFrameObj();
-        newFrame.DXT1_colors = listener.GetRawColorData();
-        newFrame.colSize = new Vector2(KinectStreamingListener.LineWidth, KinectStreamingListener.TextureHeight);
-        newFrame.positions = listener.ComputeDepthColors();
-        newFrame.posSize = new Vector2(KinectStreamingListener.LineWidth, KinectStreamingListener.TextureHeight);
-        newFrame.cameraPos = cameraPos;
-        newFrame.cameraRot = cameraRot;
+        running = true;
+        while (running)
+        {
+            PreFrameObj newFrame = new PreFrameObj();
+            newFrame.DXT1_colors = listener.GetRawColorData();
+            newFrame.colSize = new Vector2(KinectStreamingListener.LineWidth, KinectStreamingListener.TextureHeight);
+            newFrame.positions = listener.ComputeDepthColors();
+            newFrame.posSize = new Vector2(KinectStreamingListener.LineWidth, KinectStreamingListener.TextureHeight);
+            newFrame.cameraPos = cameraPos;
+            newFrame.cameraRot = cameraRot;
 
-        frameQueue.Enqueue(newFrame);
+            frameQueue.Enqueue(newFrame);
+        }
     }
 
 }

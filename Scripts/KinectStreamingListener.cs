@@ -173,13 +173,22 @@ public class KinectStreamingListener
         }
     }
 
-    private KinectFrame ReadProcess()
+    private KinectFrame PollProcess()
     {
         lock (_processQueueLock)
         {
             return processQueue.Dequeue();
         }
     }
+    
+    private KinectFrame PollUnused()
+    {
+        lock (_unusedQueueLock)
+        {
+            return unusedQueue.Dequeue();
+        }
+    }
+
 
     private void Process()
     {
@@ -199,7 +208,7 @@ public class KinectStreamingListener
 
                 if (QueuedProcesses() < 1) continue;
 
-                KinectFrame frame = ReadProcess();
+                KinectFrame frame = PollProcess();
 
                 if (newestSequence < frame.sequence)
                 {
@@ -294,7 +303,7 @@ public class KinectStreamingListener
                             continue;
                         }
 
-                        KinectFrame frame = unusedQueue.Dequeue();
+                        KinectFrame frame = PollUnused();
                         frame.deviceID = receiveBytes[1];
 
                         frame.sequence = BitConverter.ToUInt32(receiveBytes, 2);

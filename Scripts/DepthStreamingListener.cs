@@ -83,7 +83,9 @@ namespace HMIMR.DepthStreaming {
                             guid += (char)c;
                         }
                         
-                        Debug.Log("Config:\n\tFrame: "+frameWidth+" "+frameHeight+" "+maxLines+"\n\tIntrinsics: "+cx+" "+cy+" "+fx+" "+fy+" "+depthScale+"\n\tGUID: "+guid);
+                        Debug.Log("Config:\n\tFrame: "+frameWidth+" "+frameHeight+" "+maxLines+
+                                  "\n\tIntrinsics: "+cx+" "+cy+" "+fx+" "+fy+" "+depthScale+
+                                  "\n\tGUID: "+guid);
                         // We could also implement & choose a specific Processor 
                         // (i.e. with custom Proccess() function) based on DepthDeviceType...
                         processor = new DefaultDepthStreamingProcessor(type, cI,

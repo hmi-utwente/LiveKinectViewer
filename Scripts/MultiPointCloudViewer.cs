@@ -19,7 +19,6 @@ namespace HMIMR.DepthStreaming {
 				newViewer.frameSource = frameSource;
 				newViewer.m_material = Instantiate(m_material);
 				pointCloudViewers.Add(newViewer);
-
 			}
 		}
 

@@ -13,13 +13,27 @@ namespace HMIMR.DepthStreaming {
         private int m_maxPointsInInstance = 60000;
         private int m_maxPoints = 0;
 
+        public float FPS = 0.0f;
+
+        private float fpsSampleInterval = 2.0f;
+        private float lastSample = 0.0f;
+        private int fpsCounter = 0;
+        
         // Use this for initialization
         void Start() { }
 
         // Update is called once per frame
         void Update() {
             FrameObj frame = frameSource.GetNewFrame();
+            if (lastSample+fpsSampleInterval < Time.time) {
+                FPS = fpsCounter / fpsSampleInterval;
+                fpsCounter = 0;
+                lastSample = Time.time;
+            }
             if (frame != null) {
+                fpsCounter++;
+                
+                
                 Vector2 _resolution = new Vector2(frame.posTex.width, frame.posTex.height);
                 if (!resolution.Equals(_resolution)) {
                     resolution = _resolution;

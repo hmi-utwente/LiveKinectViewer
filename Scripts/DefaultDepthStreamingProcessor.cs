@@ -54,12 +54,10 @@ namespace HMIMR.DepthStreaming {
 
         private bool _processing;
         private UInt32 _newestSequence = 0;
-
-        //private DepthStreamingListener _listener;
-
-        public DefaultDepthStreamingProcessor(DepthDeviceType t, DepthCameraIntrinsics cI,
+        
+        public DefaultDepthStreamingProcessor(FrameSource fs, DepthDeviceType t, DepthCameraIntrinsics cI,
             ushort w, ushort h, ushort ml, string guid)
-            : base(t, cI, w, h, ml, guid) {
+            : base(fs, t, cI, w, h, ml, guid) {
             _depthResult = new Color[TotalWidth * TotalWidth];
             _depthData = new ushort[TotalWidth * TotalHeight];
             _colorData = new byte[TotalHeight * TotalWidth / 2];
@@ -73,23 +71,23 @@ namespace HMIMR.DepthStreaming {
             _processThread.Start();
         }
 
-        public override byte[] GetRawColorData() {
-            UpdateDepthResult();
+        public byte[] GetRawColorData() {
             lock (_colorDataLock)
                 return _colorData;
         }
 
-        public override ushort[] GetRawDepthData() {
+        public ushort[] GetRawDepthData() {
+            //UpdateDepthResult();
             lock (_depthDataLock)
-                return _depthData; // TODO: lock?
+                return _depthData;
         }
 
-        public override Color[] GetDepthData() {
+        public Color[] GetDepthData() {
             lock (_depthDataResLock)
                 return _depthResult;
         }
 
-        public new void Close() {
+        public override void Close() {
             _processing = false;
             if (_processThread != null)
                 _processThread.Join(1000);
@@ -108,7 +106,17 @@ namespace HMIMR.DepthStreaming {
                     }
 
                     if (_newestSequence < block.Sequence) {
+                        PreFrameObj newFrame = new PreFrameObj();
+                        newFrame.DXT1_colors = GetRawColorData(); // Sketchy, assuming every implementation makes DXT1 colors
+                        newFrame.colSize = new Vector2(TotalWidth, TotalHeight);
+                        newFrame.positions = GetDepthData();
+                        newFrame.posSize = new Vector2(TotalWidth, TotalHeight);
+                        newFrame.cameraPos = FrameSource.cameraPosition;
+                        newFrame.cameraRot = FrameSource.cameraRotation;
+                        FrameSource.frameQueue.Enqueue(newFrame);
+                        
                         _newestSequence = block.Sequence;
+                        
                         if (_processQueue.Count > 0) {
                             lock (_processQueueLock)
                             lock (_unusedQueueLock) {
@@ -134,7 +142,7 @@ namespace HMIMR.DepthStreaming {
                             block.Lines * TotalWidth / 2);
                         Buffer.BlockCopy(block.DepthData, 0, _depthData, block.StartRow * TotalWidth * 2,
                             block.Lines * TotalWidth * 2);
-                        //UpdateDepthResult(block.StartRow, block.EndRow); => doing this here seems efficient
+                        UpdateDepthResult(block.StartRow, block.EndRow);// => doing this here seems efficient
                     }
 
                     lock (_unusedQueueLock) {

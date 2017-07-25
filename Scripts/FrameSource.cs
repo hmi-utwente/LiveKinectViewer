@@ -6,9 +6,18 @@ using System;
 
 namespace HMIMR.DepthStreaming {
     public class FrameSource : MonoBehaviour {
-        public LockingQueue<PreFrameObj> frameQueue = new LockingQueue<PreFrameObj>();
+        
         public Transform cameraTransform;
-
+        
+        [HideInInspector] 
+        public Vector3 cameraPosition;
+        
+        [HideInInspector] 
+        public Quaternion cameraRotation;
+        
+        [HideInInspector] 
+        public LockingQueue<APreFrameObj> frameQueue = new LockingQueue<APreFrameObj>();
+        
         // Use this for initialization
         public void Start() {
             if (cameraTransform == null) {
@@ -17,11 +26,14 @@ namespace HMIMR.DepthStreaming {
         }
 
         // Update is called once per frame
-        void Update() { }
+        void Update() {
+            cameraPosition = cameraTransform.position;
+            cameraRotation = cameraTransform.rotation;
+        }
 
 
         public FrameObj GetNewFrame() {
-            PreFrameObj preObj = frameQueue.Poll();
+            APreFrameObj preObj = frameQueue.Poll();
             if (preObj != null) {
                 FrameObj newFrame = new FrameObj();
                 newFrame.posTex = new Texture2D((int) preObj.posSize.x, (int) preObj.posSize.y, TextureFormat.RGBAFloat,
@@ -53,7 +65,7 @@ namespace HMIMR.DepthStreaming {
                 newFrame.cameraRot = preObj.cameraRot;
 
                 newFrame.timeStamp = preObj.timeStamp;
-
+                preObj.Release();
                 return newFrame;
             }
             else
@@ -70,8 +82,8 @@ namespace HMIMR.DepthStreaming {
         public Quaternion cameraRot;
         public float timeStamp;
     }
-
-    public class PreFrameObj {
+    
+    public abstract class APreFrameObj {
         public Color[] positions;
         public Vector2 posSize;
         public Color[] colors;
@@ -80,6 +92,12 @@ namespace HMIMR.DepthStreaming {
         public Vector3 cameraPos;
         public Quaternion cameraRot;
         public float timeStamp;
+
+        public abstract void Release();
+    }
+    
+    public class PreFrameObj : APreFrameObj {
+        public override void Release() {}
     }
 
 

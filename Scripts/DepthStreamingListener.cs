@@ -15,12 +15,13 @@ namespace HMIMR.DepthStreaming {
         private readonly Thread _listenThread;
         private int headerSize = 12;
         private readonly object _udpClientLock = new object();
-        
+        private readonly FrameSource _frameSource;
         
 
-        public DepthStreamingListener(int port) {
+        public DepthStreamingListener(int port, FrameSource fs) {
             _listenThread = new Thread(new ThreadStart(Listen));
             _port = port;
+            _frameSource = fs;
             _listenThread.Start();
         }
 
@@ -88,8 +89,11 @@ namespace HMIMR.DepthStreaming {
                                   "\n\tGUID: "+guid);
                         // We could also implement & choose a specific Processor 
                         // (i.e. with custom Proccess() function) based on DepthDeviceType...
-                        processor = new DefaultDepthStreamingProcessor(type, cI,
-                            frameWidth, frameHeight, maxLines, guid);
+                        
+                        //processor = new DefaultDepthStreamingProcessor(
+                        processor = new VSyncProcessor(
+                        //processor = new FastProcessor(
+                            _frameSource, type, cI, frameWidth, frameHeight, maxLines, guid);
                         break;
                     case (byte) FrameType.DepthBlock:
                         if (processor == null) break;

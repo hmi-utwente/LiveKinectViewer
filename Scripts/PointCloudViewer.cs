@@ -4,6 +4,7 @@ using System;
 using UnityEngine;
 
 namespace HMIMR.DepthStreaming {
+
     public class PointCloudViewer : MonoBehaviour {
         public Material m_material;
         public FrameSource frameSource;
@@ -18,22 +19,22 @@ namespace HMIMR.DepthStreaming {
         private float fpsSampleInterval = 2.0f;
         private float lastSample = 0.0f;
         private int fpsCounter = 0;
-        
+
         // Use this for initialization
         void Start() { }
 
         // Update is called once per frame
         void Update() {
             FrameObj frame = frameSource.GetNewFrame();
-            if (lastSample+fpsSampleInterval < Time.time) {
+            if (lastSample + fpsSampleInterval < Time.time) {
                 FPS = fpsCounter / fpsSampleInterval;
                 fpsCounter = 0;
                 lastSample = Time.time;
             }
             if (frame != null) {
                 fpsCounter++;
-                
-                
+
+
                 Vector2 _resolution = new Vector2(frame.posTex.width, frame.posTex.height);
                 if (!resolution.Equals(_resolution)) {
                     resolution = _resolution;
@@ -57,7 +58,6 @@ namespace HMIMR.DepthStreaming {
                 }
             }
         }
-
 
         void CreateMesh() {
             foreach (GameObject mesh in meshes) {
@@ -114,4 +114,5 @@ namespace HMIMR.DepthStreaming {
             }
         }
     }
+
 }

@@ -4,13 +4,13 @@ using UnityEngine;
 using System.Threading;
 
 namespace HMIMR.DepthStreaming {
+
     public class RandomSource : FrameSource {
         private int frameWidth = 512;
         private int frameHeight = 424;
 
         private Vector3 cameraPos = new Vector3();
         private Quaternion cameraRot = new Quaternion();
-
 
         Thread thread;
         private bool running = false;
@@ -59,10 +59,10 @@ namespace HMIMR.DepthStreaming {
             }
         }
 
-
         void OnApplicationQuit() {
             running = false;
             thread.Join(); // block till thread is finished
         }
     }
+
 }

@@ -54,7 +54,7 @@ namespace HMIMR.DepthStreaming {
 
         private bool _processing;
         private UInt32 _newestSequence = 0;
-        
+
         public DefaultDepthStreamingProcessor(FrameSource fs, DepthDeviceType t, DepthCameraIntrinsics cI,
             ushort w, ushort h, ushort ml, string guid)
             : base(fs, t, cI, w, h, ml, guid) {
@@ -107,16 +107,17 @@ namespace HMIMR.DepthStreaming {
 
                     if (_newestSequence < block.Sequence) {
                         PreFrameObj newFrame = new PreFrameObj();
-                        newFrame.DXT1_colors = GetRawColorData(); // Sketchy, assuming every implementation makes DXT1 colors
+                        newFrame.DXT1_colors =
+                            GetRawColorData(); // Sketchy, assuming every implementation makes DXT1 colors
                         newFrame.colSize = new Vector2(TotalWidth, TotalHeight);
                         newFrame.positions = GetDepthData();
                         newFrame.posSize = new Vector2(TotalWidth, TotalHeight);
                         newFrame.cameraPos = FrameSource.cameraPosition;
                         newFrame.cameraRot = FrameSource.cameraRotation;
                         FrameSource.frameQueue.Enqueue(newFrame);
-                        
+
                         _newestSequence = block.Sequence;
-                        
+
                         if (_processQueue.Count > 0) {
                             lock (_processQueueLock)
                             lock (_unusedQueueLock) {
@@ -142,18 +143,16 @@ namespace HMIMR.DepthStreaming {
                             block.Lines * TotalWidth / 2);
                         Buffer.BlockCopy(block.DepthData, 0, _depthData, block.StartRow * TotalWidth * 2,
                             block.Lines * TotalWidth * 2);
-                        UpdateDepthResult(block.StartRow, block.EndRow);// => doing this here seems efficient
+                        UpdateDepthResult(block.StartRow, block.EndRow); // => doing this here seems efficient
                     }
 
                     lock (_unusedQueueLock) {
                         _unusedQueue.Enqueue(block);
                     }
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Debug.Log(e);
-            }
-            finally {
+            } finally {
                 _processing = false;
             }
 
@@ -197,5 +196,5 @@ namespace HMIMR.DepthStreaming {
             }
         }
     }
-    
+
 }

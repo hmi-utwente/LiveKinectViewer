@@ -11,16 +11,16 @@ namespace HMIMR.DepthStreaming {
         public BitArray ReceivedFrames;
 
         private readonly DepthStreamingProcessor _processor;
-        
+
         public SequencedFrame(DepthStreamingProcessor p) : base(p) {
             _processor = p;
             Reset();
         }
 
         public override void Release() {
-            ((VSyncProcessor)_processor).ReturnFromRender(this);
+            ((VSyncProcessor) _processor).ReturnFromRender(this);
         }
-        
+
         public void Reset() {
             ReceivedFrames = new BitArray(_processor.TotalHeight, false);
         }
@@ -51,19 +51,19 @@ namespace HMIMR.DepthStreaming {
 
         private readonly int _frameBufferSize = 16;
         private readonly Queue<SequencedFrame> _unusedQueue;
-        private readonly Dictionary<UInt32,SequencedFrame> _frameBuffer;
-        
+        private readonly Dictionary<UInt32, SequencedFrame> _frameBuffer;
+
         private readonly object _unusedQueueLock = new object();
         private readonly object _frameBufferLock = new object();
         private readonly Thread _processThread;
 
         private bool _processing;
         private UInt32 _lastSequenceRendered = 0;
-        
+
         public VSyncProcessor(FrameSource fs, DepthDeviceType t, DepthCameraIntrinsics cI,
             ushort w, ushort h, ushort ml, string guid)
             : base(fs, t, cI, w, h, ml, guid) {
-            _frameBuffer = new Dictionary<UInt32,SequencedFrame>();
+            _frameBuffer = new Dictionary<UInt32, SequencedFrame>();
             _unusedQueue = new Queue<SequencedFrame>();
             for (int i = 0; i < _frameBufferSize; i++) {
                 _unusedQueue.Enqueue(new SequencedFrame(this));
@@ -91,16 +91,14 @@ namespace HMIMR.DepthStreaming {
                 while (_processing) {
                     lock (_frameBufferLock) {
                         UInt32 remove = 0;
-                        foreach (KeyValuePair<UInt32,SequencedFrame> sequencedFrame in _frameBuffer) {
+                        foreach (KeyValuePair<UInt32, SequencedFrame> sequencedFrame in _frameBuffer) {
                             if (sequencedFrame.Key < _lastSequenceRendered) {
                                 remove = sequencedFrame.Key;
                                 //Debug.Log("A newer frame has already been rendered: "+remove);
                                 break;
                             }
-                            
+
                             if (sequencedFrame.Value.IsComplete()) {
-                                //Debug.Log("Complete frame: "+sequencedFrame.Key);
-                                //sequencedFrame.Value.ComputeDepthColors();
                                 sequencedFrame.Value.cameraPos = FrameSource.cameraPosition;
                                 sequencedFrame.Value.cameraRot = FrameSource.cameraRotation;
                                 _lastSequenceRendered = sequencedFrame.Key;
@@ -108,7 +106,7 @@ namespace HMIMR.DepthStreaming {
                                 break;
                             }
                         }
-                        
+
                         if (remove > 0) {
                             SequencedFrame removeFrame = _frameBuffer[remove];
                             _frameBuffer.Remove(remove);
@@ -122,11 +120,9 @@ namespace HMIMR.DepthStreaming {
                         }
                     }
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 Debug.Log(e);
-            }
-            finally {
+            } finally {
                 _processing = false;
             }
 
@@ -136,7 +132,8 @@ namespace HMIMR.DepthStreaming {
         public override void HandleData(ushort sr, ushort er, UInt32 seq, ref byte[] data, int dataOffset) {
             if (seq < _lastSequenceRendered) return;
 
-            lock (_frameBufferLock) lock(_unusedQueueLock) {
+            lock (_frameBufferLock)
+            lock (_unusedQueueLock) {
                 if (_frameBuffer.ContainsKey(seq)) {
                     _frameBuffer[seq].LoadData(sr, er, ref data, dataOffset);
                     _frameBuffer[seq].MarkAsLoaded(sr, er);
@@ -152,7 +149,7 @@ namespace HMIMR.DepthStreaming {
                     SequencedFrame old = _frameBuffer[oldest];
                     _frameBuffer.Remove(oldest);
                     Debug.LogWarning("Dropping frame with seq: " + oldest + ", missing: " +
-                              old.CountMissing() + " of " + TotalHeight);
+                                     old.CountMissing() + " of " + TotalHeight);
                     old.Reset();
                     _frameBuffer[seq] = old;
                     _frameBuffer[seq].LoadData(sr, er, ref data, dataOffset);
@@ -163,5 +160,5 @@ namespace HMIMR.DepthStreaming {
             }
         }
     }
-    
+
 }

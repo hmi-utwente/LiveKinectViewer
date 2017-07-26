@@ -22,4 +22,5 @@ namespace HMIMR.DepthStreaming {
         void Update() { }
 
     }
+
 }

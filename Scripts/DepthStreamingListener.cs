@@ -8,7 +8,6 @@ namespace HMIMR.DepthStreaming {
 
     public class DepthStreamingListener {
         public DepthStreamingProcessor processor;
-        
         private readonly int _port;
         private bool _listening;
         private UdpClient _udpClient;
@@ -16,7 +15,6 @@ namespace HMIMR.DepthStreaming {
         private int headerSize = 12;
         private readonly object _udpClientLock = new object();
         private readonly FrameSource _frameSource;
-        
 
         public DepthStreamingListener(int port, FrameSource fs) {
             _listenThread = new Thread(new ThreadStart(Listen));
@@ -29,12 +27,11 @@ namespace HMIMR.DepthStreaming {
             _listening = true;
             try {
                 _udpClient = new UdpClient(_port);
-            }
-            catch (Exception e) {
-                Debug.Log("Error Initializing Listener: "+e);
+            } catch (Exception e) {
+                Debug.Log("Error Initializing Listener: " + e);
                 _listening = false;
             }
-            
+
             while (_listening) {
                 byte[] receiveBytes = new byte[] { };
                 IPEndPoint receiveEndPoint = new IPEndPoint(IPAddress.Any, _port);
@@ -42,13 +39,12 @@ namespace HMIMR.DepthStreaming {
                     lock (_udpClientLock) {
                         receiveBytes = _udpClient.Receive(ref receiveEndPoint);
                     }
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     _listening = false;
-                    Debug.Log("Error Reading Depth Streaming Data: "+e);
+                    Debug.Log("Error Reading Depth Streaming Data: " + e);
                     break;
                 }
-                
+
                 if (receiveBytes.Length < 2) continue;
                 byte frameType = receiveBytes[0];
                 byte deviceID = receiveBytes[1];
@@ -81,18 +77,18 @@ namespace HMIMR.DepthStreaming {
                         for (int sOffset = 0; sOffset < 32; sOffset++) {
                             byte c = receiveBytes[32 + sOffset];
                             if (c == 0x00) break;
-                            guid += (char)c;
+                            guid += (char) c;
                         }
-                        
-                        Debug.Log("Config:\n\tFrame: "+frameWidth+" "+frameHeight+" "+maxLines+
-                                  "\n\tIntrinsics: "+cx+" "+cy+" "+fx+" "+fy+" "+depthScale+
-                                  "\n\tGUID: "+guid);
+
+                        Debug.Log("Config:\n\tFrame: " + frameWidth + " " + frameHeight + " " + maxLines +
+                                  "\n\tIntrinsics: " + cx + " " + cy + " " + fx + " " + fy + " " + depthScale +
+                                  "\n\tGUID: " + guid);
                         // We could also implement & choose a specific Processor 
                         // (i.e. with custom Proccess() function) based on DepthDeviceType...
-                        
+
                         //processor = new DefaultDepthStreamingProcessor(
                         processor = new VSyncProcessor(
-                        //processor = new FastProcessor(
+                            //processor = new FastProcessor(
                             _frameSource, type, cI, frameWidth, frameHeight, maxLines, guid);
                         break;
                     case (byte) FrameType.DepthBlock:
@@ -100,7 +96,7 @@ namespace HMIMR.DepthStreaming {
                         UInt32 sequence = BitConverter.ToUInt32(receiveBytes, 4);
                         ushort startRow = BitConverter.ToUInt16(receiveBytes, 8);
                         ushort endRow = BitConverter.ToUInt16(receiveBytes, 10);
-                        
+
                         //Debug.Log("Seq: "+sequence+" start: "+startRow+" end: "+endRow);
                         processor.HandleData(startRow, endRow, sequence, ref receiveBytes, headerSize);
                         break;
@@ -117,7 +113,7 @@ namespace HMIMR.DepthStreaming {
 
             Debug.Log("Listen Thread Closed");
         }
-        
+
         public void Close() {
             _listening = false;
             if (processor != null)
@@ -131,8 +127,7 @@ namespace HMIMR.DepthStreaming {
                 _listenThread.Join(500);
         }
     }
-    
-    
+
     public enum FrameType {
         Config = 0x01,
         DepthBlock = 0x03
@@ -159,4 +154,5 @@ namespace HMIMR.DepthStreaming {
             DepthScale = depthScale;
         }
     }
+
 }

@@ -102,9 +102,11 @@ public class KinectSource : FrameSource
 
                                     _positions[fullIndex] = new Color(xc, yc, zc);
 
-                                    int colorIndex = (((int)colorSpace[fullIndex].Y * colorWidth) + (int)colorSpace[fullIndex].X) * 4;
+                                    int colorIndex =
+(((int)colorSpace[fullIndex].Y * colorWidth) + (int)colorSpace[fullIndex].X) * 4;
                                     if (colorIndex >= 0 && colorIndex < _ColorData.Length)
-                                        _colors[fullIndex] = new Color(_ColorData[colorIndex] / 255F, _ColorData[colorIndex + 1] / 255F, _ColorData[colorIndex + 2] / 255F);
+                                        _colors[fullIndex] =
+new Color(_ColorData[colorIndex] / 255F, _ColorData[colorIndex + 1] / 255F, _ColorData[colorIndex + 2] / 255F);
                                     else
                                         _colors[fullIndex] = Color.black;
                                 }

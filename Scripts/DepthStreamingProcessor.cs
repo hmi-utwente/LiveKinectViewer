@@ -13,9 +13,9 @@ namespace HMIMR.DepthStreaming {
         public readonly string DeviceGUID;
         public readonly DepthCameraIntrinsics CameraIntrinsics;
 
-        public readonly FrameSource FrameSource;
+        public readonly DepthStreamingSource FrameSource;
 
-        protected DepthStreamingProcessor(FrameSource fs, DepthDeviceType t, DepthCameraIntrinsics cameraIntrinsics,
+        protected DepthStreamingProcessor(DepthStreamingSource fs, DepthDeviceType t, DepthCameraIntrinsics cameraIntrinsics,
             ushort w, ushort h, ushort ml, string guid) {
             DeviceType = t;
             TotalWidth = w;

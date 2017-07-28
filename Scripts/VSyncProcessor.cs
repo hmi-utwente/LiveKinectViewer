@@ -60,7 +60,7 @@ namespace HMIMR.DepthStreaming {
         private bool _processing;
         private UInt32 _lastSequenceRendered = 0;
 
-        public VSyncProcessor(FrameSource fs, DepthDeviceType t, DepthCameraIntrinsics cI,
+        public VSyncProcessor(DepthStreamingSource fs, DepthDeviceType t, DepthCameraIntrinsics cI,
             ushort w, ushort h, ushort ml, string guid)
             : base(fs, t, cI, w, h, ml, guid) {
             _frameBuffer = new Dictionary<UInt32, SequencedFrame>();

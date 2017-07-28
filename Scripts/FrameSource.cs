@@ -10,12 +10,6 @@ namespace HMIMR.DepthStreaming {
         public Transform cameraTransform;
         
         [HideInInspector] 
-        public Vector3 cameraPosition;
-        
-        [HideInInspector] 
-        public Quaternion cameraRotation;
-        
-        [HideInInspector] 
         public LockingQueue<APreFrameObj> frameQueue = new LockingQueue<APreFrameObj>();
         
         // Use this for initialization
@@ -26,10 +20,7 @@ namespace HMIMR.DepthStreaming {
         }
 
         // Update is called once per frame
-        void Update() {
-            cameraPosition = cameraTransform.position;
-            cameraRotation = cameraTransform.rotation;
-        }
+        void Update() { }
 
 
         public FrameObj GetNewFrame() {

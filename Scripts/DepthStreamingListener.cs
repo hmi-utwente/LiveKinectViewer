@@ -14,9 +14,9 @@ namespace HMIMR.DepthStreaming {
         private readonly Thread _listenThread;
         private int headerSize = 12;
         private readonly object _udpClientLock = new object();
-        private readonly FrameSource _frameSource;
+        private readonly DepthStreamingSource _frameSource;
 
-        public DepthStreamingListener(int port, FrameSource fs) {
+        public DepthStreamingListener(int port, DepthStreamingSource fs) {
             _listenThread = new Thread(new ThreadStart(Listen));
             _port = port;
             _frameSource = fs;

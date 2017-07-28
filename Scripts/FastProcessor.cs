@@ -53,7 +53,7 @@ namespace HMIMR.DepthStreaming {
                 for (int x = 0; x < _processor.TotalWidth; x++) {
                     int fullIndex = (y * _processor.TotalWidth) + x;
                     float zc = DepthData[fullIndex] * _processor.CameraIntrinsics.DepthScale;
-                    float xc = (x - _processor.CameraIntrinsics.Cx) * zc / _processor.CameraIntrinsics.Fx;
+                    float xc = -(x - _processor.CameraIntrinsics.Cx) * zc / _processor.CameraIntrinsics.Fx;
                     float yc = -(y - _processor.CameraIntrinsics.Cy) * zc / _processor.CameraIntrinsics.Fy;
                     positions[fullIndex] = new Color(xc, yc, zc);
                 }
@@ -70,7 +70,7 @@ namespace HMIMR.DepthStreaming {
         private bool _processing;
         private UInt32 _newestSequence = 0;
 
-        public FastProcessor(FrameSource fs, DepthDeviceType t, DepthCameraIntrinsics cI,
+        public FastProcessor(DepthStreamingSource fs, DepthDeviceType t, DepthCameraIntrinsics cI,
             ushort w, ushort h, ushort ml, string guid)
             : base(fs, t, cI, w, h, ml, guid) {
             _frameBuffer = new Queue<FastFrame>();
@@ -102,9 +102,9 @@ namespace HMIMR.DepthStreaming {
                     if (er == TotalHeight && seq > _newestSequence) {
                         _newestSequence = seq;
                         FastFrame ff = _frameBuffer.Dequeue();
+                        _frameBuffer.Peek().CopyFrom(ff);
                         ff.cameraPos = FrameSource.cameraPosition;
                         ff.cameraRot = FrameSource.cameraRotation;
-                        _frameBuffer.Peek().CopyFrom(ff);
                         FrameSource.frameQueue.Enqueue(ff);
                     }
                 }

@@ -22,7 +22,6 @@ namespace HMIMR.DepthStreaming {
 
         // Use this for initialization
         void Start() {
-            Debug.Log(SystemInfo.SupportsTextureFormat(TextureFormat.RHalf));
         }
 
         // Update is called once per frame

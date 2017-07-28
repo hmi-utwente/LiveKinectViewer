@@ -55,7 +55,7 @@ namespace HMIMR.DepthStreaming {
         private bool _processing;
         private UInt32 _newestSequence = 0;
 
-        public DefaultDepthStreamingProcessor(FrameSource fs, DepthDeviceType t, DepthCameraIntrinsics cI,
+        public DefaultDepthStreamingProcessor(DepthStreamingSource fs, DepthDeviceType t, DepthCameraIntrinsics cI,
             ushort w, ushort h, ushort ml, string guid)
             : base(fs, t, cI, w, h, ml, guid) {
             _depthResult = new Color[TotalWidth * TotalWidth];

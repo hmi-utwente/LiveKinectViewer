@@ -92,7 +92,7 @@ namespace HMIMR.DepthStreaming {
                 if (seq < _newestSequence) return;
 
                 lock (_frameBufferLock) {
-                    if (_frameBuffer.Count < 1) {
+                    if (_frameBuffer.Count < 2) {
                         Debug.LogWarning("Renderer not fast enough, dropping a frame.");
                         return;
                     }

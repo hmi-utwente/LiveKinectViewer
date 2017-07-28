@@ -27,6 +27,7 @@ namespace HMIMR.DepthStreaming {
             _listening = true;
             try {
                 _udpClient = new UdpClient(_port);
+                _udpClient.Client.ReceiveBufferSize = 64012*40*2; // ~2 Frames
             } catch (Exception e) {
                 Debug.Log("Error Initializing Listener: " + e);
                 _listening = false;
@@ -87,8 +88,8 @@ namespace HMIMR.DepthStreaming {
                         // (i.e. with custom Proccess() function) based on DepthDeviceType...
 
                         //processor = new DefaultDepthStreamingProcessor(
-                        processor = new VSyncProcessor(
-                            //processor = new FastProcessor(
+                        //processor = new VSyncProcessor(
+                        processor = new FastProcessor(
                             _frameSource, type, cI, frameWidth, frameHeight, maxLines, guid);
                         break;
                     case (byte) FrameType.DepthBlock:

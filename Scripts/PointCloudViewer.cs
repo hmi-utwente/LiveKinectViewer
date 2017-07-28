@@ -21,7 +21,9 @@ namespace HMIMR.DepthStreaming {
         private int fpsCounter = 0;
 
         // Use this for initialization
-        void Start() { }
+        void Start() {
+            Debug.Log(SystemInfo.SupportsTextureFormat(TextureFormat.RHalf));
+        }
 
         // Update is called once per frame
         void Update() {

@@ -99,7 +99,7 @@ namespace HMIMR.DepthStreaming {
                     yy /= resolution.y;
 
                     uvs0[i] = new Vector2(xx, yy);
-                    uvs1[i] = new Vector2(xx, yy);
+                    uvs1[i] = new Vector2(xx, 1-yy);
 
                     totIndex++;
                 }

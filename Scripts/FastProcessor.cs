@@ -14,7 +14,8 @@ namespace HMIMR.DepthStreaming {
 
         public FastFrame(DepthStreamingProcessor p) {
             _processor = p;
-            DXT1_colors = new byte[_processor.TotalHeight * _processor.TotalWidth / 2];
+            DXT1_colors = null;//new byte[_processor.TotalHeight * _processor.TotalWidth / 2];
+            JPEG_colors = null;// new byte[_processor.TotalHeight * _processor.TotalWidth / 2];
             DepthData = new ushort[_processor.TotalHeight * _processor.TotalWidth];
             positions = new Color[_processor.TotalHeight * _processor.TotalWidth];
             colSize = new Vector2(_processor.TotalWidth, _processor.TotalHeight);
@@ -23,24 +24,32 @@ namespace HMIMR.DepthStreaming {
 
         public void CopyFrom(FastFrame src) {
             // assuming initialized with same values
-            Buffer.BlockCopy(src.DXT1_colors, 0, DXT1_colors, 0, DXT1_colors.Length);
+            //Buffer.BlockCopy(src.DXT1_colors, 0, DXT1_colors, 0, DXT1_colors.Length);
+            JPEG_colors = (byte[]) src.JPEG_colors.Clone();
             src.positions.CopyTo(positions, 0);
         }
 
         public override void Release() {
+            JPEG_colors = null;
             ((FastProcessor) _processor).ReturnFromRender(this);
         }
+        public void LoadColorData(ref byte[] data, int dataOffset) {
+            int jpegLength = data.Length - dataOffset;
+            JPEG_colors = new byte[jpegLength];
+            Buffer.BlockCopy(data, dataOffset, JPEG_colors, 0, jpegLength);
+        }
 
-        public void LoadData(ushort sr, ushort er, ref byte[] data, int dataOffset) {
+        public void LoadDepthData(ushort sr, ushort er, ref byte[] data, int dataOffset) {
             ushort lines = (ushort) (er - sr);
             int depthDataSize = lines * _processor.TotalWidth * 2;
-            int colorDataSize = lines * _processor.TotalWidth / 2;
+            //int colorDataSize = lines * _processor.TotalWidth / 2;
 
             Buffer.BlockCopy(data, dataOffset, DepthData,
                 sr * _processor.TotalWidth * 2, depthDataSize);
+            /*
             Buffer.BlockCopy(data, dataOffset + depthDataSize, DXT1_colors,
                 sr * _processor.TotalWidth / 2, colorDataSize);
-
+                */
             ComputeDepthColors(sr, er);
         }
 
@@ -63,7 +72,7 @@ namespace HMIMR.DepthStreaming {
 
     public class FastProcessor : DepthStreamingProcessor {
 
-        private readonly int _frameBufferSize = 12;
+        private readonly int _frameBufferSize = 30;
         private readonly Queue<FastFrame> _frameBuffer;
         private readonly object _frameBufferLock = new object();
 
@@ -87,7 +96,24 @@ namespace HMIMR.DepthStreaming {
 
         public override void Close() { }
 
-        public override void HandleData(ushort sr, ushort er, UInt32 seq, ref byte[] data, int dataOffset) {
+        public override void HandleColorData(uint seq, ref byte[] data, int dataOffset) {
+            try {
+                if (seq < _newestSequence) return;
+                lock (_frameBufferLock) {
+                    if (_frameBuffer.Count < 2) {
+                        Debug.LogWarning("Renderer not fast enough, dropping a frame.");
+                        return;
+                    }
+
+                    _frameBuffer.Peek().LoadColorData(ref data, dataOffset);
+
+                }
+            } catch (Exception e) {
+                Debug.LogError(e);
+            }
+        }
+
+        public override void HandleDepthData(ushort sr, ushort er, UInt32 seq, ref byte[] data, int dataOffset) {
             try {
                 if (seq < _newestSequence) return;
 
@@ -97,7 +123,7 @@ namespace HMIMR.DepthStreaming {
                         return;
                     }
 
-                    _frameBuffer.Peek().LoadData(sr, er, ref data, dataOffset);
+                    _frameBuffer.Peek().LoadDepthData(sr, er, ref data, dataOffset);
 
                     if (er == TotalHeight && seq > _newestSequence) {
                         _newestSequence = seq;
@@ -105,6 +131,7 @@ namespace HMIMR.DepthStreaming {
                         _frameBuffer.Peek().CopyFrom(ff);
                         ff.cameraPos = FrameSource.cameraPosition;
                         ff.cameraRot = FrameSource.cameraRotation;
+                        if (ff.JPEG_colors == null) ff.Release();
                         FrameSource.frameQueue.Enqueue(ff);
                     }
                 }

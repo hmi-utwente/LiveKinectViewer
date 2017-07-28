@@ -129,19 +129,23 @@ namespace HMIMR.DepthStreaming {
             Debug.Log("Process Thread Closed");
         }
 
-        public override void HandleData(ushort sr, ushort er, UInt32 seq, ref byte[] data, int dataOffset) {
+        public override void HandleColorData(uint seq, ref byte[] data, int dataOffset) {
+            throw new NotImplementedException();
+        }
+
+        public override void HandleDepthData(ushort sr, ushort er, UInt32 seq, ref byte[] data, int dataOffset) {
             if (seq < _lastSequenceRendered) return;
 
             lock (_frameBufferLock)
             lock (_unusedQueueLock) {
                 if (_frameBuffer.ContainsKey(seq)) {
-                    _frameBuffer[seq].LoadData(sr, er, ref data, dataOffset);
+                    _frameBuffer[seq].LoadDepthData(sr, er, ref data, dataOffset);
                     _frameBuffer[seq].MarkAsLoaded(sr, er);
                     //Debug.Log("Using old frame: "+seq);
                 } else if (_unusedQueue.Count > 0) {
                     _frameBuffer[seq] = _unusedQueue.Dequeue();
                     _frameBuffer[seq].Reset();
-                    _frameBuffer[seq].LoadData(sr, er, ref data, dataOffset);
+                    _frameBuffer[seq].LoadDepthData(sr, er, ref data, dataOffset);
                     _frameBuffer[seq].MarkAsLoaded(sr, er);
                     //Debug.Log("Dequeued for: "+seq);
                 } else if (_frameBuffer.Count > 0) {
@@ -152,7 +156,7 @@ namespace HMIMR.DepthStreaming {
                                      old.CountMissing() + " of " + TotalHeight);
                     old.Reset();
                     _frameBuffer[seq] = old;
-                    _frameBuffer[seq].LoadData(sr, er, ref data, dataOffset);
+                    _frameBuffer[seq].LoadDepthData(sr, er, ref data, dataOffset);
                     _frameBuffer[seq].MarkAsLoaded(sr, er);
                 } else {
                     Debug.LogWarning("Not enough (unused) framebuffers.");

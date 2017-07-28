@@ -27,7 +27,7 @@ namespace HMIMR.DepthStreaming {
             try {
                 _udpClient = new UdpClient(_port);
                 _udpClient.Client.ReceiveBufferSize = 64012*40*2; // ~2 Frames
-                _udpClient.Client.ReceiveTimeout = 250;
+                //_udpClient.Client.ReceiveTimeout = 250;
             } catch (Exception e) {
                 Debug.Log("Error Initializing Listener: " + e);
                 _listening = false;
@@ -92,12 +92,19 @@ namespace HMIMR.DepthStreaming {
                         break;
                     case (byte) FrameType.DepthBlock:
                         if (processor == null) break;
-                        UInt32 sequence = BitConverter.ToUInt32(receiveBytes, 4);
-                        ushort startRow = BitConverter.ToUInt16(receiveBytes, 8);
-                        ushort endRow = BitConverter.ToUInt16(receiveBytes, 10);
+                        UInt32 sequenceD = BitConverter.ToUInt32(receiveBytes, 4);
+                        ushort startRowD = BitConverter.ToUInt16(receiveBytes, 8);
+                        ushort endRowD = BitConverter.ToUInt16(receiveBytes, 10);
 
                         //Debug.Log("Seq: "+sequence+" start: "+startRow+" end: "+endRow);
-                        processor.HandleData(startRow, endRow, sequence, ref receiveBytes, headerSize);
+                        processor.HandleDepthData(startRowD, endRowD, sequenceD, ref receiveBytes, headerSize);
+                        break;
+                    case (byte)FrameType.ColorBlock:
+                        if (processor == null) break;
+                        UInt32 sequenceC = BitConverter.ToUInt32(receiveBytes, 4);
+                        //ushort startRowC = BitConverter.ToUInt16(receiveBytes, 8); // if we split up frames, this could be: msgX...
+                        //ushort endRowC = BitConverter.ToUInt16(receiveBytes, 10); // ...........................................ofY
+                        processor.HandleColorData(sequenceC, ref receiveBytes, headerSize);
                         break;
                     default:
                         Debug.Log("Unknown DepthStreaming frame type: " + receiveBytes[0]);
@@ -125,7 +132,8 @@ namespace HMIMR.DepthStreaming {
 
     public enum FrameType {
         Config = 0x01,
-        DepthBlock = 0x03
+        DepthBlock = 0x03,
+        ColorBlock = 0x04
     }
 
     public enum DepthDeviceType {

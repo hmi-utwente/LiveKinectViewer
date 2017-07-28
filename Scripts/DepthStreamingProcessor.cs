@@ -29,8 +29,10 @@ namespace HMIMR.DepthStreaming {
         // How do we make explicit that a DepthStreamingProcessor is (now) responsible for calling:
         //  frameSource.frameQueue.enqueue(...)
 
-        public abstract void HandleData(ushort startRow, ushort endRow,
+        public abstract void HandleDepthData(ushort startRow, ushort endRow,
             UInt32 sequence, ref byte[] data, int dataOffset);
+
+        public abstract void HandleColorData(UInt32 sequenceC, ref byte[] data, int dataOffset);
 
         /*
         public abstract byte[] GetRawColorData();

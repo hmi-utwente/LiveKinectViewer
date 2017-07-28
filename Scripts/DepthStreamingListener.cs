@@ -13,7 +13,6 @@ namespace HMIMR.DepthStreaming {
         private UdpClient _udpClient;
         private readonly Thread _listenThread;
         private int headerSize = 12;
-        private readonly object _udpClientLock = new object();
         private readonly DepthStreamingSource _frameSource;
 
         public DepthStreamingListener(int port, DepthStreamingSource fs) {
@@ -28,6 +27,7 @@ namespace HMIMR.DepthStreaming {
             try {
                 _udpClient = new UdpClient(_port);
                 _udpClient.Client.ReceiveBufferSize = 64012*40*2; // ~2 Frames
+                _udpClient.Client.ReceiveTimeout = 250;
             } catch (Exception e) {
                 Debug.Log("Error Initializing Listener: " + e);
                 _listening = false;
@@ -37,9 +37,7 @@ namespace HMIMR.DepthStreaming {
                 byte[] receiveBytes = new byte[] { };
                 IPEndPoint receiveEndPoint = new IPEndPoint(IPAddress.Any, _port);
                 try {
-                    lock (_udpClientLock) {
-                        receiveBytes = _udpClient.Receive(ref receiveEndPoint);
-                    }
+                    receiveBytes = _udpClient.Receive(ref receiveEndPoint);
                 } catch (Exception e) {
                     _listening = false;
                     Debug.Log("Error Reading Depth Streaming Data: " + e);
@@ -107,9 +105,7 @@ namespace HMIMR.DepthStreaming {
                 }
             }
 
-            lock (_udpClientLock) {
-                _udpClient.Close();
-            }
+            _udpClient.Close();
             _listening = false;
 
             Debug.Log("Listen Thread Closed");
@@ -120,9 +116,7 @@ namespace HMIMR.DepthStreaming {
             if (processor != null)
                 processor.Close();
             if (_udpClient != null) {
-                lock (_udpClientLock) {
-                    _udpClient.Close();
-                }
+                _udpClient.Close();
             }
             if (_listenThread != null)
                 _listenThread.Join(500);

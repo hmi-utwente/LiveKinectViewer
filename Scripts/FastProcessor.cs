@@ -25,14 +25,15 @@ namespace HMIMR.DepthStreaming {
         public void CopyFrom(FastFrame src) {
             // assuming initialized with same values
             //Buffer.BlockCopy(src.DXT1_colors, 0, DXT1_colors, 0, DXT1_colors.Length);
-            JPEG_colors = (byte[]) src.JPEG_colors.Clone();
+            JPEG_colors = src.JPEG_colors;// (byte[]) src.JPEG_colors.Clone();
             src.positions.CopyTo(positions, 0);
         }
 
         public override void Release() {
-            JPEG_colors = null;
+            //JPEG_colors = null;
             ((FastProcessor) _processor).ReturnFromRender(this);
         }
+
         public void LoadColorData(ref byte[] data, int dataOffset) {
             int jpegLength = data.Length - dataOffset;
             JPEG_colors = new byte[jpegLength];
@@ -131,7 +132,6 @@ namespace HMIMR.DepthStreaming {
                         _frameBuffer.Peek().CopyFrom(ff);
                         ff.cameraPos = FrameSource.cameraPosition;
                         ff.cameraRot = FrameSource.cameraRotation;
-                        if (ff.JPEG_colors == null) ff.Release();
                         FrameSource.frameQueue.Enqueue(ff);
                     }
                 }

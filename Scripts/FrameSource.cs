@@ -6,12 +6,12 @@ using System;
 
 namespace HMIMR.DepthStreaming {
     public class FrameSource : MonoBehaviour {
-        
+
         public Transform cameraTransform;
-        
-        [HideInInspector] 
-        public LockingQueue<APreFrameObj> frameQueue = new LockingQueue<APreFrameObj>();
-        
+
+        [HideInInspector]
+        public LockingQueue frameQueue = new LockingQueue();
+
         // Use this for initialization
         public void Start() {
             if (cameraTransform == null) {
@@ -27,7 +27,7 @@ namespace HMIMR.DepthStreaming {
             APreFrameObj preObj = frameQueue.Poll();
             if (preObj != null) {
                 FrameObj newFrame = new FrameObj();
-                newFrame.posTex = new Texture2D((int) preObj.posSize.x, (int) preObj.posSize.y, TextureFormat.RGBAFloat,
+                newFrame.posTex = new Texture2D((int)preObj.posSize.x, (int)preObj.posSize.y, TextureFormat.RGBAFloat,
                     false);
                 newFrame.posTex.wrapMode = TextureWrapMode.Repeat;
                 newFrame.posTex.filterMode = FilterMode.Point;
@@ -35,14 +35,14 @@ namespace HMIMR.DepthStreaming {
                 newFrame.posTex.Apply();
 
                 if (preObj.colors != null) {
-                    newFrame.colTex = new Texture2D((int) preObj.colSize.x, (int) preObj.colSize.y,
+                    newFrame.colTex = new Texture2D((int)preObj.colSize.x, (int)preObj.colSize.y,
                         TextureFormat.RGBAFloat, false);
                     newFrame.colTex.wrapMode = TextureWrapMode.Repeat;
                     newFrame.colTex.filterMode = FilterMode.Point;
                     newFrame.colTex.SetPixels(preObj.colors);
                     newFrame.colTex.Apply();
                 } else if (preObj.DXT1_colors != null) {
-                    newFrame.colTex = new Texture2D((int) preObj.colSize.x, (int) preObj.colSize.y, TextureFormat.DXT1,
+                    newFrame.colTex = new Texture2D((int)preObj.colSize.x, (int)preObj.colSize.y, TextureFormat.DXT1,
                         false);
                     newFrame.colTex.wrapMode = TextureWrapMode.Clamp;
                     newFrame.colTex.filterMode = FilterMode.Point;
@@ -62,8 +62,7 @@ namespace HMIMR.DepthStreaming {
                 newFrame.timeStamp = preObj.timeStamp;
                 preObj.Release();
                 return newFrame;
-            }
-            else
+            } else
                 return null;
         }
 
@@ -77,7 +76,7 @@ namespace HMIMR.DepthStreaming {
         public Quaternion cameraRot;
         public float timeStamp;
     }
-    
+
     public abstract class APreFrameObj {
         public Color[] positions;
         public Vector2 posSize;
@@ -91,49 +90,45 @@ namespace HMIMR.DepthStreaming {
 
         public abstract void Release();
     }
-    
+
     public class PreFrameObj : APreFrameObj {
-        public override void Release() {}
+        public override void Release() { }
     }
 
 
-    public class LockingQueue<T> : IEnumerable<T> {
-        private Queue<T> _queue = new Queue<T>();
+    public class LockingQueue {
+        private Queue<APreFrameObj> _queue = new Queue<APreFrameObj>();
 
-        public T Dequeue() {
+        public APreFrameObj Dequeue() {
             lock (_queue) {
                 return _queue.Dequeue();
             }
         }
 
-        public T Poll() {
+        public APreFrameObj Poll() {
             lock (_queue) {
-                T returnObj = default(T);
+                APreFrameObj returnObj = null;
                 if (_queue.Count > 1) {
                     Debug.Log("Skipping " + (_queue.Count - 1) + " Frames");
+                } else if (_queue.Count == 0) {
+                    return null;
                 }
-                while (_queue.Count > 0) {
+
+                while (_queue.Count > 1) {
                     returnObj = _queue.Dequeue();
+                    returnObj.Release();
                 }
-                return returnObj;
+
+                return _queue.Dequeue();
             }
         }
 
-        public void Enqueue(T data) {
+        public void Enqueue(APreFrameObj data) {
             if (data == null) throw new ArgumentNullException("data");
 
             lock (_queue) {
                 _queue.Enqueue(data);
             }
-        }
-
-        // Lets the consumer thread consume the queue with a foreach loop.
-        IEnumerator<T> IEnumerable<T>.GetEnumerator() {
-            while (true) yield return Dequeue();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() {
-            return ((IEnumerable<T>) this).GetEnumerator();
         }
     }
 }

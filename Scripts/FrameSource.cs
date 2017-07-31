@@ -100,13 +100,13 @@ namespace HMIMR.DepthStreaming {
         private Queue<APreFrameObj> _queue = new Queue<APreFrameObj>();
 
         public APreFrameObj Dequeue() {
-            lock (_queue) {
+            //lock (_queue) {
                 return _queue.Dequeue();
-            }
+            //}
         }
 
         public APreFrameObj Poll() {
-            lock (_queue) {
+            //lock (_queue) {
                 APreFrameObj returnObj = null;
                 if (_queue.Count > 1) {
                     Debug.Log("Skipping " + (_queue.Count - 1) + " Frames");
@@ -120,15 +120,15 @@ namespace HMIMR.DepthStreaming {
                 }
 
                 return _queue.Dequeue();
-            }
+            //}
         }
 
         public void Enqueue(APreFrameObj data) {
             if (data == null) throw new ArgumentNullException("data");
 
-            lock (_queue) {
+            //lock (_queue) {
                 _queue.Enqueue(data);
-            }
+            //}
         }
     }
 }

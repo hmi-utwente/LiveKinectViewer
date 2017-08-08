@@ -118,6 +118,8 @@ namespace HMIMR.DepthStreaming {
             try {
                 if (seq < _newestSequence) return;
 
+                FastFrame ff = null;
+
                 lock (_frameBufferLock) {
                     if (_frameBuffer.Count < 2) {
                         Debug.LogWarning("Renderer not fast enough, dropping a frame.");
@@ -128,13 +130,16 @@ namespace HMIMR.DepthStreaming {
 
                     if (er == TotalHeight && seq > _newestSequence) {
                         _newestSequence = seq;
-                        FastFrame ff = _frameBuffer.Dequeue();
+                        ff = _frameBuffer.Dequeue();
                         _frameBuffer.Peek().CopyFrom(ff);
-                        ff.cameraPos = FrameSource.cameraPosition;
-                        ff.cameraRot = FrameSource.cameraRotation;
-                        FrameSource.frameQueue.Enqueue(ff);
                     }
                 }
+                if (ff != null) {
+                    ff.cameraPos = FrameSource.cameraPosition;
+                    ff.cameraRot = FrameSource.cameraRotation;
+                    FrameSource.frameQueue.Enqueue(ff);
+                }
+
             } catch (Exception e) {
                 Debug.LogError(e);
             }

@@ -79,6 +79,7 @@ namespace HMIMR.DepthStreaming {
 
         private bool _processing;
         private UInt32 _newestSequence = 0;
+        private int continuousSmallerSeqAm = 0;
 
         public FastProcessor(DepthStreamingSource fs, DepthDeviceType t, DepthCameraIntrinsics cI,
             ushort w, ushort h, ushort ml, string guid)
@@ -116,7 +117,14 @@ namespace HMIMR.DepthStreaming {
 
         public override void HandleDepthData(ushort sr, ushort er, UInt32 seq, ref byte[] data, int dataOffset) {
             try {
-                if (seq < _newestSequence) return;
+                if (seq < _newestSequence) {
+                    continuousSmallerSeqAm++;
+                    if (continuousSmallerSeqAm > 30)
+                        _newestSequence = seq-1;
+                    else
+                        return;
+                }
+                continuousSmallerSeqAm = 0;
 
                 FastFrame ff = null;
 

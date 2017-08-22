@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028334, g: 0.2257134, b: 0.30692226, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -108,6 +108,70 @@ NavMeshSettings:
     tileSize: 256
     accuratePlacement: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &584919124
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 584919127}
+  - component: {fileID: 584919126}
+  - component: {fileID: 584919125}
+  m_Layer: 0
+  m_Name: KinectStreamingSourceB
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &584919125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 584919124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89a6a2ac21a22ae498442ea95c7e1dcb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  debug: 0
+  socketID: kinect2
+  remoteAddress: 
+  remotePort: 0
+  useMatchmakingServer: 1
+  isSender: 0
+  _serverHostname: impress.mooo.com
+  _serverPort: 6312
+  connected: 0
+--- !u!114 &584919126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 584919124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecff736855897954ea3f8cd87c2112da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cameraTransform: {fileID: 0}
+  cameraPosition: {x: 0, y: 0, z: 0}
+  cameraRotation: {x: 0, y: 0, z: 0, w: 0}
+--- !u!4 &584919127
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 584919124}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1025115000
 GameObject:
   m_ObjectHideFlags: 0
@@ -138,7 +202,7 @@ MonoBehaviour:
   m_material: {fileID: 2100000, guid: 3b70d167192b19049a366b36a012432a, type: 2}
   frameSources:
   - {fileID: 1225876299}
-  - {fileID: 1081129686}
+  - {fileID: 584919126}
 --- !u!4 &1025115002
 Transform:
   m_ObjectHideFlags: 0
@@ -151,50 +215,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1081129685
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 1081129687}
-  - component: {fileID: 1081129686}
-  m_Layer: 0
-  m_Name: KinectStreamingSourceB
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1081129686
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1081129685}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ecff736855897954ea3f8cd87c2112da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cameraTransform: {fileID: 0}
-  dataPort: 1339
-  cameraPosition: {x: 0, y: 0, z: 0}
-  cameraRotation: {x: 0, y: 0, z: 0, w: 0}
---- !u!4 &1081129687
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1081129685}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1173057029
 GameObject:
@@ -284,6 +304,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1225876300}
   - component: {fileID: 1225876299}
+  - component: {fileID: 1225876301}
   m_Layer: 0
   m_Name: KinectStreamingSourceA
   m_TagString: Untagged
@@ -303,7 +324,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cameraTransform: {fileID: 0}
-  dataPort: 1339
   cameraPosition: {x: 0, y: 0, z: 0}
   cameraRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!4 &1225876300
@@ -319,6 +339,26 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1225876301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1225876298}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89a6a2ac21a22ae498442ea95c7e1dcb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  debug: 0
+  socketID: kinect1
+  remoteAddress: 
+  remotePort: 0
+  useMatchmakingServer: 1
+  isSender: 0
+  _serverHostname: impress.mooo.com
+  _serverPort: 6312
+  connected: 0
 --- !u!1 &1679637965
 GameObject:
   m_ObjectHideFlags: 0

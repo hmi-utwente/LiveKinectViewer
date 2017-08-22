@@ -8,43 +8,29 @@ namespace HMIMR.DepthStreaming {
 
     public class DepthStreamingListener {
         public DepthStreamingProcessor processor;
-        private readonly int _port;
         private bool _listening;
-        private UdpClient _udpClient;
         private readonly Thread _listenThread;
         private int headerSize = 12;
         private readonly DepthStreamingSource _frameSource;
+        IMPRESS_UDPClient udpClient;
 
-        public DepthStreamingListener(int port, DepthStreamingSource fs) {
+        public DepthStreamingListener(IMPRESS_UDPClient _udpClient, DepthStreamingSource fs) {
             _listenThread = new Thread(new ThreadStart(Listen));
-            _port = port;
             _frameSource = fs;
+            udpClient = _udpClient;
             _listenThread.Start();
         }
 
         private void Listen() {
             _listening = true;
-            try {
-                _udpClient = new UdpClient(_port);
-                _udpClient.Client.ReceiveBufferSize = 64012*40*2; // ~2 Frames
-                //_udpClient.Client.ReceiveTimeout = 250;
-            } catch (Exception e) {
-                Debug.Log("Error Initializing Listener: " + e);
-                _listening = false;
-            }
-
+            
             while (_listening) {
                 byte[] receiveBytes = new byte[] { };
-                IPEndPoint receiveEndPoint = new IPEndPoint(IPAddress.Any, _port);
-                try {
-                    receiveBytes = _udpClient.Receive(ref receiveEndPoint);
-                } catch (Exception e) {
-                    _listening = false;
-                    Debug.Log("Error Reading Depth Streaming Data: " + e);
-                    break;
-                }
+                receiveBytes = udpClient.GetNewData();
 
+                if (receiveBytes== null) continue;
                 if (receiveBytes.Length < 2) continue;
+                
                 byte frameType = receiveBytes[0];
                 byte deviceID = receiveBytes[1];
 
@@ -112,7 +98,6 @@ namespace HMIMR.DepthStreaming {
                 }
             }
 
-            _udpClient.Close();
             _listening = false;
 
             Debug.Log("Listen Thread Closed");
@@ -122,9 +107,6 @@ namespace HMIMR.DepthStreaming {
             _listening = false;
             if (processor != null)
                 processor.Close();
-            if (_udpClient != null) {
-                _udpClient.Close();
-            }
             if (_listenThread != null)
                 _listenThread.Join(500);
         }

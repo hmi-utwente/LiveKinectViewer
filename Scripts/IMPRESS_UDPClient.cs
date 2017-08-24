@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Text;
 using System.Linq;
 
@@ -47,6 +48,7 @@ public class IMPRESS_UDPClient : MonoBehaviour {
 
     private Task _sendTask;
     private bool _sendRunning = false;
+    ManualResetEvent send_MRSTE = new ManualResetEvent(false);
     private Task _listenTask;
     private bool _listenRunning = false;
     private Queue<byte[]> _sendQueue = new Queue<byte[]>();
@@ -117,6 +119,8 @@ public class IMPRESS_UDPClient : MonoBehaviour {
         if (connected) {
             lock (_sendQueue) {
                 _sendQueue.Enqueue(dataBufferToSend);
+                send_MRSTE.Set();
+                send_MRSTE.Reset();
             }
         }
     }
@@ -124,7 +128,7 @@ public class IMPRESS_UDPClient : MonoBehaviour {
 
     UInt32 packageSequenceID = 0;
     public void SendSplitData(byte[] nextPacket) {
-        if (connected) { 
+        if (connected) {
             if (nextPacket.Length != 0) {
                 packageSequenceID++;
                 UInt32 partsAm = (UInt32)((nextPacket.Length + cutoffLength - 1) / cutoffLength); // Round Up The Result Of Integer Division
@@ -157,7 +161,7 @@ public class IMPRESS_UDPClient : MonoBehaviour {
                     }
                     SendData(sendBytes);
                 }
-            }       
+            }
         }
     }
 
@@ -389,19 +393,23 @@ public class IMPRESS_UDPClient : MonoBehaviour {
         _sendRunning = true;
 
         while (_sendRunning) {
-            if (!connected) {
-                await Task.Delay(TimeSpan.FromSeconds(0.5));
-            } else {
+            send_MRSTE.WaitOne();
+            if (debug) Debug.Log("DataSender Unlocked");
+            int queueCount = 1;
+            while (queueCount > 0) {
                 byte[] nextPacket = new byte[0];
                 lock (_sendQueue) {
-                    if (_sendQueue.Count > 0) {
+                    queueCount = _sendQueue.Count;
+                    if (queueCount > 0) {
                         nextPacket = _sendQueue.Dequeue();
                     }
                 }
                 if (nextPacket.Length != 0) {
                     _sendData(nextPacket, remoteAddress, remotePort);
+                    if (debug) Debug.Log("DataSender Sent Data");
                 }
             }
+
         }
         if (debug) Debug.Log("DataSender Stopped");
     }

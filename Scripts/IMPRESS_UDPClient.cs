@@ -70,7 +70,7 @@ public class IMPRESS_UDPClient : MonoBehaviour {
     private float currentTime = 0;
 
     // Remote Client
-    private bool connected = false;
+    public bool connected { get; private set; } = false;
 
 
 #if !UNITY_EDITOR && UNITY_METRO

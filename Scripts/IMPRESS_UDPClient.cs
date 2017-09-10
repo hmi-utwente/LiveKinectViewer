@@ -115,19 +115,8 @@ public class IMPRESS_UDPClient : MonoBehaviour {
         }
     }
 
-    public void SendData(byte[] dataBufferToSend) {
-        if (connected) {
-            lock (_sendQueue) {
-                _sendQueue.Enqueue(dataBufferToSend);
-                send_MRSTE.Set();
-                send_MRSTE.Reset();
-            }
-        }
-    }
-
-
     UInt32 packageSequenceID = 0;
-    public void SendSplitData(byte[] nextPacket) {
+    public void SendData(byte[] nextPacket) {
         if (connected) {
             if (nextPacket.Length != 0) {
                 packageSequenceID++;
@@ -159,7 +148,7 @@ public class IMPRESS_UDPClient : MonoBehaviour {
                         writer.Write(cutData);
                         sendBytes = fs.ToArray();
                     }
-                    SendData(sendBytes);
+                    _BufferSendData(sendBytes);
                 }
             }
         }
@@ -360,6 +349,16 @@ public class IMPRESS_UDPClient : MonoBehaviour {
 
 
     //------------- SEND STUFF -----------------
+
+    private void _BufferSendData(byte[] dataBufferToSend) {
+        if (connected) {
+            lock (_sendQueue) {
+                _sendQueue.Enqueue(dataBufferToSend);
+                send_MRSTE.Set();
+                send_MRSTE.Reset();
+            }
+        }
+    }
 
     private async void _sendData(byte[] data, string hostName, int port) {
 #if !UNITY_EDITOR && UNITY_METRO

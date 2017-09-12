@@ -1,0 +1,3 @@
+[submodule "Scripts/ImPresS_Networking"]
+	path = Scripts/ImPresS_Networking
+	url = https://github.com/hmi-utwente/ImPresS_Networking.git

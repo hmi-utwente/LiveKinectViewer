@@ -73,7 +73,7 @@ Material:
     m_Floats:
     - _BumpScale: 1
     - _Cutoff: 0.5
-    - _DepthClip: 10
+    - _DepthClip: 8.71
     - _DetailNormalMapScale: 1
     - _Distance: 10
     - _DstBlend: 0
@@ -84,7 +84,7 @@ Material:
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _ParticleSize: 0.003
+    - _ParticleSize: 0.00669
     - _PointSize: 1.13
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1

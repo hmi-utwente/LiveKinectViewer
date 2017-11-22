@@ -7,7 +7,6 @@ Shader "Custom/VertexTex"
 		_ParticleSize("Particle Size", Range(0, 0.015)) = 0.006
 		_PositionTex("Position Texture", 2D) = "black" {}
 		_ColorTex("Color Texture", 2D) = "black" {}
-		_DepthClip("Depth clip", Range(0, 15)) = 10
 	}
 
 	SubShader
@@ -34,21 +33,18 @@ Shader "Custom/VertexTex"
 			struct geoInput
 			{
 				float4 pos : SV_POSITION;
-				float4 uvPos : TEXCOORD0; // uv pos
-				float4 uvCol : TEXCOORD1; // uv col
+				float4 uvCol : TEXCOORD0; // uv col
 			};
 
 			struct fragInput
 			{
 				float4 pos : SV_POSITION;
-				float4 uvPos : TEXCOORD0; // uv pos
-				float4 uvCol : TEXCOORD1; // uv col
+				float4 uvCol : TEXCOORD0; // uv col
 			};
 
 			float _ParticleSize;
 			sampler2D _PositionTex;
 			sampler2D _ColorTex;
-			float _DepthClip;
 
 			geoInput vert(vertexInput v)
 			{
@@ -56,7 +52,6 @@ Shader "Custom/VertexTex"
 				float4 p = tex2Dlod(_PositionTex, v.uvPos);
 
 				o.pos = p;
-				o.uvPos = v.uvPos;
 				o.uvCol = v.uvCol;
 				return o;
 			}
@@ -77,7 +72,6 @@ Shader "Custom/VertexTex"
 				v[3] = float4(halfS * right + halfS * up, 1.0f);
 
 				fragInput pIn;
-				pIn.uvPos = p[0].uvPos;
 
 				[loop]
 				for (uint i = 0; i < 4; i++)
@@ -86,16 +80,13 @@ Shader "Custom/VertexTex"
 						mul(UNITY_MATRIX_MV, p[0].pos)
 						+ float4(v[i].x, v[i].y, 0.0, 0.0));
 					pIn.uvCol = p[0].uvCol;
+
 					triStream.Append(pIn);
 				}
 			}
 
 			float4 frag(fragInput i) : COLOR
 			{
-				float3 p = tex2D(_PositionTex, i.uvPos);
-				if (p.z > _DepthClip)
-					discard;
-
 				float3 c = tex2D(_ColorTex, i.uvCol);
 				return float4(c, 1);
 			}

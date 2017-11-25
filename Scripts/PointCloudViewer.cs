@@ -20,13 +20,15 @@ namespace HMIMR.DepthStreaming {
         private float lastSample = 0.0f;
         private int fpsCounter = 0;
 
+        FrameObj lastFrame;
+
         // Use this for initialization
         void Start() {
         }
 
         // Update is called once per frame
-        void Update() {
-            FrameObj frame = frameSource.GetNewFrame();
+        public void UpdateNow() {
+            FrameObj frame = frameSource.GetNewFrame(lastFrame);
             if (lastSample + fpsSampleInterval < Time.time) {
                 FPS = fpsCounter / fpsSampleInterval;
                 fpsCounter = 0;
@@ -34,12 +36,13 @@ namespace HMIMR.DepthStreaming {
             }
             if (frame != null) {
                 fpsCounter++;
+                lastFrame = frame;
 
 
                 Vector2 _resolution = new Vector2(frame.posTex.width, frame.posTex.height);
                 if (!resolution.Equals(_resolution)) {
                     resolution = _resolution;
-                    m_maxPoints = (int) (_resolution.x * _resolution.y);
+                    m_maxPoints = (int)(_resolution.x * _resolution.y);
                     CreateMesh();
                 }
 
@@ -48,13 +51,13 @@ namespace HMIMR.DepthStreaming {
 
                 Texture2D newColTex = frame.colTex;
                 if (newColTex != null) {
-                    Destroy(m_material.GetTexture("_ColorTex"));
+                    //Destroy(m_material.GetTexture("_ColorTex"));
                     m_material.SetTexture("_ColorTex", newColTex);
                 }
 
                 Texture2D newPosTex = frame.posTex;
                 if (newPosTex != null) {
-                    Destroy(m_material.GetTexture("_PositionTex"));
+                    //Destroy(m_material.GetTexture("_PositionTex"));
                     m_material.SetTexture("_PositionTex", newPosTex);
                 }
             }

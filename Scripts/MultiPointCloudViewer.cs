@@ -8,6 +8,9 @@ namespace HMIMR.DepthStreaming {
         public Material m_material;
         public List<FrameSource> frameSources = new List<FrameSource>();
         private List<PointCloudViewer> pointCloudViewers = new List<PointCloudViewer>();
+        private int lastViewerUpdate = 0;
+        private int nextUpdate = 1;
+        public int updateEvery = 2;
 
         // Use this for initialization
         void Start() {
@@ -22,7 +25,16 @@ namespace HMIMR.DepthStreaming {
         }
 
         // Update is called once per frame
-        void Update() { }
+        void Update() {
+            nextUpdate--;
+            if (nextUpdate <= 0) {
+                nextUpdate = updateEvery;
+                lastViewerUpdate++;
+                if (lastViewerUpdate >= pointCloudViewers.Count)
+                    lastViewerUpdate = 0;
+                pointCloudViewers[lastViewerUpdate].UpdateNow();
+            }
+        }
     }
 
 }

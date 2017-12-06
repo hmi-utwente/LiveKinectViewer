@@ -4,7 +4,7 @@ Shader "Custom/VertexTex"
 {
 	Properties
 	{
-		_ParticleSize("Particle Size", Range(0, 0.015)) = 0.006
+		_ParticleSize("Particle Size", Range(0, 0.015)) = 0.003
 		_PositionTex("Position Texture", 2D) = "black" {}
 		_ColorTex("Color Texture", 2D) = "black" {}
 	}
@@ -62,8 +62,7 @@ Shader "Custom/VertexTex"
 				float3 up = float3(0, 1, 0);
 				float3 right = float3(1, 0, 0);
 
-				float halfS = 0.5f * _ParticleSize;
-				//halfS = halfS * p[0].pos.z;
+				float halfS = 0.5f * _ParticleSize * p[0].pos.z;
 
 				float4 v[4];
 				v[0] = float4(-halfS * right - halfS * up, 1.0f);
